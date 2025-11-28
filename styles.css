@@ -8,8 +8,10 @@
 
 :root {
   /* Color Palette */
+  /* Use project-relative image paths (no leading slash) so the files load
+    whether served from a local server or opened from disk. */
   --bg-gradient: url("grad-hero.png");
-  --grid-pattern: url("grid-pattern.png");
+  --grid-pattern: url("svg-image-1.png");
 
   /* Glass Card Styles */
   --glass-card-bg: rgba(255, 245, 245, 0.17);
