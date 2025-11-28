@@ -8,8 +8,8 @@
 
 :root {
   /* Color Palette */
-  --bg-gradient: url("/images/grad-hero.png");
-  --grid-pattern: url("/images/grid-pattern.png");
+  --bg-gradient: url("grad-hero.png");
+  --grid-pattern: url("grid-pattern.png");
 
   /* Glass Card Styles */
   --glass-card-bg: rgba(255, 245, 245, 0.17);
