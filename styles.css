@@ -261,7 +261,7 @@ body::after {
   min-height: 200px;
   resize: vertical;
   background: rgba(255, 255, 255, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.6);
+  border: 0px solid rgba(255, 255, 255, 0.6);
   padding: 16px;
   border-radius: 12px;
   color: var(--text-dark);
@@ -272,7 +272,7 @@ body::after {
 
 .input-card textarea:focus {
   outline: none;
-  border-color: var(--accent-primary);
+  border-color: rgba(255, 255, 255, 0.4);
   box-shadow: 0 0 0 3px rgba(255, 255, 255, 0);
   background: rgba(255, 255, 255, 0.6);
 }
