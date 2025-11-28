@@ -8,7 +8,12 @@
 
 :root {
   /* Color Palette */
-   --bg-gradient: linear-gradient(50deg,rgba(0, 255, 238, 1) 0%, rgba(255, 60, 0, 1) 100%);
+  --bg-gradient: linear-gradient(
+        50deg,
+        #29FFF1 0%,
+        #9BFC6A 50%,
+        #ff5b00 100%
+      );
 
   /* Glass Card Styles */
   --glass-card-bg: rgba(255, 245, 245, 0.17);
