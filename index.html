@@ -289,17 +289,6 @@
           <button class="btn primary" onclick="parseData()">Parse Data</button>
           <button class="btn copy" onclick="copyResults()">Copy</button>
           <button class="btn danger" onclick="clearData()">Clear All</button>
-          <button class="btn settings" onclick="toggleSettings()">Settings</button>
-        </div>
-        <div id="settingsPanel" style="display:none;margin-top:12px" class="settings">
-          <div class="card" style="padding:12px;">
-            <h4 style="margin:0 0 8px 0">Parser Settings</h4>
-            <label><input type="checkbox" id="optIdAfterTime" checked> Require ID after date/time</label>
-            <label><input type="checkbox" id="optNameAfterId" checked> Require NAME after ID</label>
-            <label>Search forward for ID (lines): <input type="number" id="optIdLookahead" value="4" min="1" style="width:68px"></label>
-            <label>Search forward for NAME (lines after ID): <input type="number" id="optNameLookahead" value="6" min="1" style="width:68px"></label>
-            <label>Max lookahead (lines for bank/amount): <input type="number" id="optMaxLookahead" value="20" min="5" style="width:68px"></label>
-          </div>
         </div>
         <div id="errorContainer" style="margin-top:12px"></div>
         <div id="results" style="display:none;margin-top:14px" class="fade-in">
@@ -360,9 +349,6 @@
   </div>
 
   <script>
-    // Parser logic (same as original)
-    const VALID_BANKS = ['BCA','BRI','BNI','MANDIRI','BSI','DANA','GOPAY','LINKAJA','OVO','SEABANK','JAGO','BANK PAPUA','CIMB','DANAMON','OCBC','PERMATA'];
-    const PARSE_SETTINGS = { idAfterTime:true, nameAfterID:true, idLookahead:5, nameLookahead:6, maxLookahead:20 };
   let parsedResults = [];
   let pgaResults = [];
 
@@ -379,19 +365,6 @@
         if(!el) return;
         el.style.display = (id===name) ? 'block' : 'none';
       });
-    }
-
-    function toggleSettings(){
-      const p = document.getElementById('settingsPanel');
-      p.style.display = p.style.display === 'none' ? 'block' : 'none';
-    }
-
-    function readSettingsFromUI(){
-      PARSE_SETTINGS.idAfterTime = document.getElementById('optIdAfterTime').checked;
-      PARSE_SETTINGS.nameAfterID = document.getElementById('optNameAfterId').checked;
-      PARSE_SETTINGS.idLookahead = parseInt(document.getElementById('optIdLookahead').value,10)||4;
-      PARSE_SETTINGS.nameLookahead = parseInt(document.getElementById('optNameLookahead').value,10)||6;
-      PARSE_SETTINGS.maxLookahead = parseInt(document.getElementById('optMaxLookahead').value,10)||20;
     }
 
     function showError(message, containerId='errorContainer'){
@@ -694,6 +667,7 @@
   </script>
 </body>
 </html>
+
 
 
 
