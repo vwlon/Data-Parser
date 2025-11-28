@@ -9,11 +9,12 @@
 :root {
   /* Color Palette */
   --bg-gradient: linear-gradient(
-        50deg,
-        #29FFF1 0%,
-        #9BFC6A 50%,
-        #ff5b00 100%
-      );
+     50deg,
+     #21FFF0 0%,
+     #21B5AB 30%,
+     #ff5b00 70%,
+     #ff5b00 100%
+   );
 
   /* Glass Card Styles */
   --glass-card-bg: rgba(255, 245, 245, 0.17);
