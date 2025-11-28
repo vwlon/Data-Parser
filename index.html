@@ -426,15 +426,30 @@
             continue;
           }
 
-          // Extract up to 22 lines for this block
-          const maxBlockLines = 32;
+        // Parse block from TOPJITU until NOTE (max 50 lines for safety)
           const blockLines = [];
           let lineCount = 0;
-          for (let offset = 0; offset < maxBlockLines && i + offset < allLines.length; offset++) {
-            blockLines.push(allLines[i + offset]);
+          let foundEndMarker = false;
+          const maxScan = 50;
+          
+          for (let offset = 0; offset < maxScan && i + offset < allLines.length; offset++) {
+            const currentLine = allLines[i + offset];
+            blockLines.push(currentLine);
             lineCount++;
+          
+            if (currentLine.trim() === 'NOTE') {
+              foundEndMarker = true;
+              break;
+            }
           }
 
+          if (!foundEndMarker) {
+            errors.push(`Block ${blockIndex}: Missing 'NOTE' terminator.`);
+            i++;
+            blockIndex++;
+            continue;
+          }
+          
           if (lineCount < 10) {
             errors.push(`Block ${blockIndex}: Too short (only ${lineCount} lines, need at least 10).`);
             i++; // move forward to avoid infinite loop
@@ -679,5 +694,6 @@
   </script>
 </body>
 </html>
+
 
 
