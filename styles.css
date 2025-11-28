@@ -8,13 +8,9 @@
 
 :root {
   /* Color Palette */
-  --bg-gradient: linear-gradient(
-     50deg,
-     #29FFF1 0%,
-     #3CFFF0 30%,
-     #FF7A1E 70%,
-     #FF3C00 100%
-   );
+  /* Use project-relative image paths (no leading slash) so the files load
+    whether served from a local server or opened from disk. */
+  --bg-gradient: url("grad-hero.png");
 
   /* Glass Card Styles */
   --glass-card-bg: rgba(255, 245, 245, 0.17);
@@ -264,7 +260,7 @@ body::after {
   min-height: 200px;
   resize: vertical;
   background: rgba(255, 255, 255, 0.4);
-  border: 0px solid rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.6);
   padding: 16px;
   border-radius: 12px;
   color: var(--text-dark);
@@ -275,8 +271,8 @@ body::after {
 
 .input-card textarea:focus {
   outline: none;
-  border-color: rgba(255, 255, 255, 0.4);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15);
   background: rgba(255, 255, 255, 0.6);
 }
 
