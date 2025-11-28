@@ -1,346 +1,127 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Text/Data Parser — Sequoia UI</title>
-  <meta name="description" content="Text/Data Parser — dark Sequoia-style UI">
-  <style>
-    :root{
-      --bg: #2a2a2c; /* Graphite Grey */
-      --panel: rgba(255,255,255,0);
-      --glass: rgba(255,255,255,0.04);
-      --muted: rgba(255,255,255,0.6);
-      --accent: rgba(120, 140, 255, 0.95);
-      --success: #22c55e;
-      --danger: #ff6b6b;
-      --glass-border: rgba(255,255,255,0.06);
-      --card-radius: 16px;
-      --shadow-1: 0 6px 22px rgba(0,0,0,0.55);
-      --shadow-2: 0 10px 38px rgba(0,0,0,0.65);
-      --glass-blur: 14px;
-      --scrollbar-track: rgba(0,0,0,0.2);
-      --scrollbar-thumb: rgba(255,255,255,0.25);
-      --scrollbar-thumb-hover: rgba(255,255,255,0.35);
-      --settings-btn-bg: rgba(200,200,200,0.25);
-      --settings-btn-border: rgba(255,255,255,0.2);
-      font-synthesis: none;
-    }
-    /* System-UI (SF Pro / macOS / iOS like) */
-    html, body {
-      height: 100%;
-      margin: 0;
-      overflow: hidden; /* prevent whole page scroll */
-    }
-    body{
-      margin:0;
-      min-height:100%;
-      background: linear-gradient(180deg, #1f1f21 10%, #252427 100%);
-      color: #e8e8ea;
-      font-family: -apple-system, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial;
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      display:flex;
-      align-items:stretch;
-      gap:20px;
-      padding:20px;
-    }
-    /* APP SHELL */
-    .app {
-      display: flex;
-      width: 100vw;   /* full viewport width */
-      height: 100%;
-      gap: 28px;
-      box-sizing: border-box;
-    }
-    /* GLASS SIDEBAR — Updated with full glass effect, width kept at 180px */
-    .sidebar {
-      position: sticky;
-      top: 0;              /* sticks to top of viewport */
-      height: 100%; 
-      height: calc(100vh - 40px); /* full viewport height minus top/bottom padding */
-      border-radius: 25px;
-      background: var(--glass);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(var(--glass-blur));
-      box-shadow: var(--shadow-1);
-      padding: 20px;
-      box-sizing: border-box;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      flex-shrink: 0;
-      overflow-y: auto;    /* optional internal scroll */
-    }
-    .brand{
-      display:flex;
-      gap:12px;
-      align-items:center;
-    }
-    .brand-logo{
-      width:44px;height:44px;border-radius:10px;
-      background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-      display:flex;align-items:center;justify-content:center;font-weight:700;color:var(--accent);
-      box-shadow: inset 0 -6px 12px rgba(0,0,0,0.25);
-      font-size:18px;
-      backdrop-filter: blur(6px);
-    }
-    .brand h2{font-size:14px;margin:0;color:#fff;font-weight:600;}
-    .brand p{margin:0;font-size:12px;color:var(--muted)}
-    .nav{display:flex;flex-direction:column;gap:6px;margin-top:6px}
-    .nav button{appearance:none;border:0;background:transparent;color:var(--muted);text-align:left;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:18px}
-    .nav button:hover{background:rgba(255,255,255,0.5);color:#fff}
-    .nav button.active{background:linear-gradient(180deg, var(--accent), rgba(70,80,220,0.95));color:#fff;box-shadow: 0 4px 25px rgba(0,0,0,0.5);border-left:5px solid var(--accent);padding-left:10px}
-    .sidebar .footer{margin-top:auto;font-size:12px;color:var(--muted);text-align:center}
-    /* MAIN AREA */
-    .main {
-      flex: 1;
-      height: 100%;
-      overflow-y: auto; /* scroll happens here, not body */
-      padding: 0 0 28px 0;
-      box-sizing: border-box;
-    }
-    .header {
-      min-height: 5px; /* or whatever you want */
-      padding: 0px 0px;
-    }
-    .title {
-      font-size: 45px;
-      font-weight: 500;
-      letter-spacing: 0px;
-      line-height: 0.3; /* adjust vertical space */
-      height: 30px; /* force header height if needed */
-      padding-top: 10px; /* extra space inside the box */
-    }
-    .subtitle {
-      color: var(--muted);
-      font-size: 15px;
-      margin: 0; /* remove default margins */
-    }
-    /* Card (iOS-style floating) */
-    .card{
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border-radius: var(--card-radius);
-      padding:18px;
-      box-shadow: var(--shadow-2);
-      border: 1px solid rgba(255,255,255,0.03);
-      backdrop-filter: blur(6px);
-    }
-    /* Input area — now full width (no right column) */
-    .input-card textarea{
-      width:98%;
-      min-height:200px;
-      resize:vertical;
-      background:transparent;
-      border:1px solid rgba(255,255,255,0.04);
-      padding:14px;
-      border-radius:10px;
-      color:inherit;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace;
-      font-size:12px;
-      overflow: auto;
-    }
-    .input-card textarea:focus{
-      outline:none;
-      border-color:rgba(120,140,255,0);
-      box-shadow:0 6px 18px rgba(120,140,255,0.06);
-    }
-    .controls{display:flex;gap:10px;flex-wrap:wrap}
-    .btn{
-      border:0;padding:50px 14px;border-radius:15px;cursor:pointer;font-weight:600;font-size:13px;min-width:110px;letter-spacing:0.2px
-    }
-    .btn.primary{
-      background:linear-gradient(180deg,var(--accent), rgba(70,80,220,0.95));
-      color:white;
-      box-shadow:0 8px 30px rgba(60,70,210,0.18)
-    }
-    .btn.danger{
-      background:linear-gradient(180deg,var(--danger), #ff4b4b);
-      color:white
-    }
-    .btn.settings{
-      background: var(--settings-btn-bg);
-      border: 1px solid var(--settings-btn-border);
-      color: #fff;
-    }
-    .btn.copy{
-      background: linear-gradient(180deg, var(--success), #16a34a);
-      color: white;
-      box-shadow: 0 8px 30px rgba(34,197,94,0.12);
-    }
-    /* PGA-specific styling (defaults mirror main styles). */
-    /* You can customize these by changing variables under the #pga selector. */
-    #pga{
-      --pga-accent: var(--accent);
-      --pga-success: var(--success);
-      --pga-danger: var(--danger);
-    }
-    #pga .btn{
-      border:0;padding:30px 14px;border-radius:15px;cursor:pointer;font-weight:600;font-size:13px;min-width:500px;letter-spacing:0.2px
-    }
-    #pga .btn.primary{
-      background:linear-gradient(180deg,var(--pga-accent), rgba(70,80,220,0.95));
-      color:white;
-      box-shadow:0 8px 30px rgba(60,70,210,0.18)
-    }
-    #pga .btn.danger{
-      background:linear-gradient(180deg,var(--pga-danger), #ff4b4b);
-      color:white
-    }
-    #pga .btn.copy{
-      background: linear-gradient(180deg, var(--pga-success), #16a34a);
-      color: white;
-      box-shadow: 0 8px 30px rgba(34,197,94,0.12);
-    }
-    #pga .btn.small {
-      font-size:12px;
-      padding:18px 18px;
-      border-radius:15px;
-      min-width:150px; /* override the 500px from #pga .btn */
-    }
-    /* results table */
-    .table-wrap{overflow:auto;border-radius:10px;border:1px solid rgba(255,255,255,0.03);}
-    table{width:100%;border-collapse:collapse;font-size:14px}
-    thead th{
-      position:sticky;
-      top:0;
-      background:rgba(255,255,255,0.02);
-      backdrop-filter: blur(4px);
-      padding:12px;
-      text-align:left;
-      color:var(--muted);
-      font-weight:700
-    }
-    tbody td{
-      padding:12px;
-      border-top:1px solid rgba(255,255,255,0.02)
-    }
-    tbody tr:hover{
-      background:linear-gradient(90deg, rgba(255,255,255,0.01), rgba(255,255,255,0.005))
-    }
-    .muted{color:var(--muted)}
-    .empty-cell{
-      background:rgba(255,255,255,0.02);
-      text-align:center;
-      border-radius:8px;
-      padding:6px
-    }
-    /* settings panel */
-    .settings{display:flex;flex-direction:column;gap:8px;font-size:13px}
-    .settings label{
-      display:flex;
-      align-items:center;
-      gap:8px
-    }
-    /* Scrollbar Theming */
-    *::-webkit-scrollbar { width: 10px; height: 10px; }
-    *::-webkit-scrollbar-track {
-      background: var(--scrollbar-track);
-      border-radius: 10px;
-    }
-    *::-webkit-scrollbar-thumb {
-      background: var(--scrollbar-thumb);
-      border-radius: 10px;
-    }
-    *::-webkit-scrollbar-thumb:hover {
-      background: var(--scrollbar-thumb-hover);
-    }
-    /* responsive */
-    @media (max-width:1100px){
-      .main{padding-bottom:30px}
-      .sidebar{display:none}
-    }
-    /* subtle animations */
-    .fade-in{animation:fadeIn .28s ease both}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-    /* tiny helpers */
-    .muted-2{color:rgba(255,255,255,0.45)}
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PGA Data Parser — Glass UI</title>
+  <meta name="description" content="PGA Data Parser with stunning glass morphism UI">
+  
+  <!-- Google Fonts - Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <div class="app">
+    <!-- Sidebar -->
     <aside class="sidebar" aria-hidden="false">
       <div class="brand">
         <div class="brand-logo">V5</div>
         <div>
           <h2>Parser Tools</h2>
-          <p class="muted">Sequoia</p>
+          <p class="muted">Glass Edition</p>
         </div>
       </div>
+      
       <nav class="nav" role="navigation">
         <button class="active" onclick="showTab('original', this)">PGA Withdraw</button>
         <button onclick="showTab('pga', this)">PGA Deposit</button>
       </nav>
+      
       <div class="footer muted-2">Parser Tools v.5.2 © DLN • 2025</div>
     </aside>
+
+    <!-- Main Content -->
     <main class="main">
       <header class="header">
-        <div>
-          <div class="title">PGA DATA PARSER</div>
-          <div class="subtitle">© DLN • 2025</div>
-        </div>
+        <div class="title">PGA DATA PARSER</div>
+        <div class="subtitle">© DLN • 2025</div>
       </header>
 
-  <!-- FULL-WIDTH INPUT SECTION (NO RIGHT COLUMN) -->
-  <section id="original" class="card input-card">
+      <!-- PGA Withdraw Section -->
+      <section id="original" class="card input-card">
         <textarea id="inputText" placeholder="Paste your text data here..."></textarea>
-        <div style="height:14px"></div>
+        <div style="height: 16px"></div>
+        
         <div class="controls">
           <button class="btn primary" onclick="parseData()">Parse Data</button>
           <button class="btn copy" onclick="copyResults()">Copy</button>
           <button class="btn danger" onclick="clearData()">Clear All</button>
         </div>
-        <div id="errorContainer" style="margin-top:12px"></div>
-        <div id="results" style="display:none;margin-top:14px" class="fade-in">
-          <h3 style="margin:0 0 8px 0">Parsed Data</h3>
+        
+        <div id="errorContainer" style="margin-top: 14px"></div>
+        
+        <div id="results" style="display: none; margin-top: 18px" class="fade-in">
+          <h3 style="margin: 0 0 12px 0; font-weight: 700; color: var(--text-dark)">Parsed Data</h3>
           <div class="table-wrap">
             <table id="resultTable">
               <thead>
-                <tr><th>Bank</th><th>ID</th><th> </th><th>Nominal</th><th>Name</th><th>Ref Number</th></tr>
+                <tr>
+                  <th>Bank</th>
+                  <th>ID</th>
+                  <th> </th>
+                  <th>Nominal</th>
+                  <th>Name</th>
+                  <th>Ref Number</th>
+                </tr>
               </thead>
               <tbody id="tableBody"></tbody>
             </table>
           </div>
-          <div class="card" style="margin-top:12px;padding:12px;">
-            <strong>Parsing Statistics</strong>
-            <div id="statsContent" style="margin-top:8px;color:var(--muted)"></div>
+          
+          <div class="card" style="margin-top: 14px; padding: 16px; background: rgba(255,255,255,0.3);">
+            <strong style="color: var(--text-dark)">Parsing Statistics</strong>
+            <div id="statsContent" style="margin-top: 10px"></div>
           </div>
         </div>
       </section>
-      <!-- PGA DEPOSIT / CSV IMPORT SECTION -->
-      <section id="pga" class="card input-card" style="display:none">
 
-        <!-- Main content: centered button -->
-        <div style="display:flex; flex-direction:column; align-items:center; padding:12px; border-radius:10px; background:linear-gradient(180deg,rgba(255,255,255,0.01),rgba(255,255,255,0.005));">
-          <input type="file" id="csvFileInput" style="display:none" accept=".csv" onchange="handleFileSelect(event)">
+      <!-- PGA Deposit / CSV Import Section -->
+      <section id="pga" class="card input-card" style="display: none">
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 24px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.2);
+        ">
+          <input type="file" id="csvFileInput" style="display: none" accept=".csv" onchange="handleFileSelect(event)">
           
-          <!-- Centered button -->
-          <button class="btn primary" onclick="document.getElementById('csvFileInput').click()">Choose CSV File</button>
+          <button class="btn primary" onclick="document.getElementById('csvFileInput').click()">
+            Choose CSV File
+          </button>
 
-          <!-- Keep filename div hidden so JS doesn't break -->
-          <div id="fileName" style="display:none;"></div>
-          
-          <div id="csvErrorContainer" style="margin-top:8px; text-align:center;"></div>
+          <div id="fileName" style="display: none;"></div>
+          <div id="csvErrorContainer" style="margin-top: 12px; text-align: center;"></div>
 
           <!-- PGA Results -->
-          <div id="pgaResults" style="display:none; margin-top:0px; width:100%;">
-            <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
-              <button class="btn copy small" onclick="copyIDAmount(this)">Copy ID AMOUNT</button>
-              <button class="btn copy small" onclick="copyRefNumb(this)">Copy REF NUMBER</button>
+          <div id="pgaResults" style="display: none; margin-top: 20px; width: 100%;">
+            <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+              <button class="btn copy small" onclick="copyIDAmount(this)">Copy ID Amount</button>
+              <button class="btn copy small" onclick="copyRefNumb(this)">Copy Ref Number</button>
               <button class="btn danger small" onclick="clearPGAData()">Clear All</button>
             </div>
 
-            <div class="table-wrap" style="margin-top:8px;">
-              <table id="pgaTable" style="margin:0 auto;">
+            <div class="table-wrap" style="margin-top: 16px;">
+              <table id="pgaTable" style="margin: 0 auto;">
                 <thead>
-                  <tr><th>ID</th><th>Nominal</th><th> </th><th>Ref Number</th></tr>
+                  <tr>
+                    <th>ID</th>
+                    <th>Nominal</th>
+                    <th> </th>
+                    <th>Ref Number</th>
+                  </tr>
                 </thead>
                 <tbody id="pgaTableBody"></tbody>
               </table>
             </div>
 
-            <div class="card" style="margin-top:8px; padding:12px; background:transparent; border:0;">
-              <div id="pgaStatsContent" class="muted-2" style="text-align:center;"></div>
+            <div style="margin-top: 14px; padding: 12px; text-align: center;">
+              <div id="pgaStatsContent" class="muted-2"></div>
             </div>
           </div>
         </div>
@@ -348,330 +129,7 @@
     </main>
   </div>
 
-  <script>
-  let parsedResults = [];
-  let pgaResults = [];
-
-    function showTab(name, btn){
-      // toggle nav active state
-      const navs = document.querySelectorAll('.nav button');
-      navs.forEach(n=>n.classList.remove('active'));
-      if(btn) btn.classList.add('active');
-
-      // show/hide main sections
-      const sections = ['original','pga'];
-      sections.forEach(id=>{
-        const el = document.getElementById(id);
-        if(!el) return;
-        el.style.display = (id===name) ? 'block' : 'none';
-      });
-    }
-
-    function showError(message, containerId='errorContainer'){
-      const container = document.getElementById(containerId);
-      container.innerHTML = `<div style="background:linear-gradient(180deg,rgba(255,120,120,0.06),rgba(255,120,120,0.02));padding:10px;border-radius:8px;color:var(--danger);border-left:4px solid var(--danger)">${message}</div>`;
-      setTimeout(()=>{container.innerHTML='';},5000);
-    }
-
-    function parseData() {
-      const inputText = document.getElementById('inputText').value;
-      if (!inputText.trim()) {
-        showError('Please enter some text data to parse.');
-        return;
-      }
-
-      const allLines = inputText
-        .replace(/\r\n/g, '\n')
-        .replace(/\r/g, '\n')
-        .split('\n');
-      parsedResults = [];
-      const errors = [];
-      let i = 0;
-      let blockIndex = 1;
-      console.log('First 5 lines:', allLines.slice(0, 5));
-      console.log('Total lines:', allLines.length);
-      
-      while (i < allLines.length) {
-        try {
-          // Skip until "TOPJITU"
-          if (!/^\s*TOPJITU\s*$/.test(allLines[i])) {
-            i++;
-            continue;
-          }
-
-        // Parse block from TOPJITU until NOTE (max 50 lines for safety)
-          const blockLines = [];
-          let lineCount = 0;
-          let foundEndMarker = false;
-          const maxScan = 50;
-          
-          for (let offset = 0; offset < maxScan && i + offset < allLines.length; offset++) {
-            const currentLine = allLines[i + offset];
-            blockLines.push(currentLine);
-            lineCount++;
-          
-            if (currentLine.trim() === 'NOTE') {
-              foundEndMarker = true;
-              break;
-            }
-          }
-
-          if (!foundEndMarker) {
-            errors.push(`Block ${blockIndex}: Missing 'NOTE' terminator.`);
-            i++;
-            blockIndex++;
-            continue;
-          }
-          
-          if (lineCount < 10) {
-            errors.push(`Block ${blockIndex}: Too short (only ${lineCount} lines, need at least 10).`);
-            i++; // move forward to avoid infinite loop
-            blockIndex++;
-            continue;
-          }
-
-          const getLine = (n) => lineCount >= n ? blockLines[n - 1] : '';
-
-          const id = (getLine(9) || '').trim();
-          const name = (getLine(11) || '').trim();
-          const bank = (getLine(13) || '').trim();
-          let nominal = (getLine(15) || '').trim().replace(/^Rp\s*/i, '').trim();
-
-          // Optional: remove thousands separators (dots), but keep commas if used as decimal?
-          // nominal = nominal.replace(/\./g, '');
-
-          let reff = '';
-          const line22 = getLine(22);
-          if (line22) {
-            const tfPattern = /^TF_\d{6}_[A-Z0-9]{15,30}$/;
-            if (tfPattern.test(line22.trim())) {
-              reff = line22.trim();
-            }
-          }
-
-          // Validate required fields
-          let hasError = false;
-          if (!id) { errors.push(`Block ${blockIndex}: Missing ID (line 9).`); hasError = true; }
-          if (!name) { errors.push(`Block ${blockIndex}: Missing Name (line 11).`); hasError = true; }
-          if (!bank) { errors.push(`Block ${blockIndex}: Missing Bank (line 13).`); hasError = true; }
-          if (!nominal) { errors.push(`Block ${blockIndex}: Missing Nominal (line 15).`); hasError = true; }
-
-          console.log(`Block ${blockIndex} - Line 1: "${allLines[i]}"`);
-          console.log(`Line 9: "${getLine(9)}", Line 11: "${getLine(11)}"`);
-          
-          if (!hasError) {
-            parsedResults.push({ bank, id, name, amount: nominal, reff, space: '' });
-          }
-
-          // Advance past this block
-          i += lineCount;
-          blockIndex++;
-
-        } catch (err) {
-          console.error('Parse error at line index', i, err);
-          errors.push(`Block ${blockIndex}: Parse error - ${err.message}`);
-          i++; // prevent infinite loop on error
-          blockIndex++;
-        }
-      }
-
-      // Final validation & feedback
-      if (parsedResults.length === 0) {
-        console.warn('No transactions parsed. Sample input:', allLines.slice(0, 10));
-        showError('No valid transactions found. Please check the input format.');
-        return;
-      }
-
-      displayResults();
-      if (errors.length > 0) {
-        showError(`Found ${errors.length} parsing notice(s). Check console for details.`);
-      }
-    }
-
-    function displayResults(){
-      const tableBody = document.getElementById('tableBody');
-      const resultsDiv = document.getElementById('results');
-      const statsContent = document.getElementById('statsContent');
-      tableBody.innerHTML='';
-      parsedResults.forEach(row=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${row.bank}</td><td>${row.id}</td><td class="empty-cell">${row.space||'&nbsp;'}</td><td>${row.amount||''}</td><td>${row.name||''}</td><td>${row.reff||''}</td>`;
-        tableBody.appendChild(tr);
-      });
-      const bankCounts = {}; parsedResults.forEach(r=>bankCounts[r.bank]=(bankCounts[r.bank]||0)+1);
-      const totalAmount = parsedResults.filter(r=>r.amount).reduce((s,r)=>s+(parseInt(r.amount)||0),0);
-      statsContent.innerHTML = `<div class="muted-2">Total Transactions: ${parsedResults.length}<br>Total Amount: Rp ${totalAmount.toLocaleString('id-ID')}<br>Bank Distribution:<br>${Object.entries(bankCounts).map(([b,c])=>`&nbsp;&nbsp;${b}: ${c}`).join('<br>')}</div>`;
-      resultsDiv.style.display='block';
-    }
-
-    function clearData(){ document.getElementById('inputText').value=''; document.getElementById('results').style.display='none'; document.getElementById('errorContainer').innerHTML=''; parsedResults=[]; }
-
-    // show a brief success message (uses --success color)
-    function showSuccess(message, containerId='errorContainer'){
-      const container = document.getElementById(containerId);
-      container.innerHTML = `<div style="background:linear-gradient(180deg,rgba(34,197,94,0.06),rgba(34,197,94,0.02));padding:10px;border-radius:8px;color:var(--success);border-left:4px solid var(--success)">${message}</div>`;
-      setTimeout(()=>{ if(container) container.innerHTML=''; },3000);
-    }
-
-    // Copy the result table as tab-separated text to clipboard
-    function copyResults(){
-      const table = document.getElementById('resultTable');
-      if(!table) { showError('No result table found to copy.'); return; }
-      const rows = table.querySelectorAll('thead tr, tbody tr');
-      if(!rows || rows.length===0){ showError('No results to copy.'); return; }
-      try{
-        const lines = [];
-        // body rows only (no headers)
-        table.querySelectorAll('tbody tr').forEach(tr=>{
-          const cols = Array.from(tr.cells).map(td=>td.innerText.replace(/\u00A0/g,' ').trim());
-          lines.push(cols.join('\t'));
-        });
-        const text = lines.join('\n');
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(text).then(()=>{ showSuccess('Result table copied to clipboard.'); }).catch(err=>{
-            // fallback
-            const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
-            try{ document.execCommand('copy'); showSuccess('Result table copied to clipboard.'); }catch(e){ showError('Copy failed: '+(e&&e.message||e)); }
-            ta.remove();
-          });
-        } else {
-          const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select();
-          try{ document.execCommand('copy'); showSuccess('Result table copied to clipboard.'); }catch(e){ showError('Copy failed: '+(e&&e.message||e)); }
-          ta.remove();
-        }
-      }catch(err){ console.error(err); showError('Copy failed: '+err.message); }
-    }
-
-    /* --- PGA Deposit CSV functions (imported from text_parser_v4) --- */
-    function handleFileSelect(event){
-      const file = event.target.files && event.target.files[0];
-      if(!file) return;
-      if(file.type !== 'text/csv' && !file.name.endsWith('.csv')){ showCSVError('Please select a valid CSV file.'); return; }
-      document.getElementById('fileName').textContent = `Selected: ${file.name}`;
-      const reader = new FileReader();
-      reader.onload = function(e){
-        try{ parseCSVData(e.target.result); }catch(err){ showCSVError('Error reading file: '+err.message); }
-      };
-      reader.readAsText(file);
-    }
-
-    function parseCSVData(csv){
-      const lines = csv.split('\n').map(l=>l.trim()).filter(l=>l!=='');
-      if(lines.length===0){ showCSVError('CSV file is empty.'); return; }
-      const headers = lines[0].split(',').map(h=>h.trim().replace(/"/g,''));
-      const idInvoiceIndex = headers.findIndex(h=>h.toLowerCase().includes('id invoice'));
-      const nominalIndex = headers.findIndex(h=>h.toLowerCase().includes('nominal'));
-      const refNoIndex = headers.findIndex(h=>h.toLowerCase().includes('ref.no') || h.toLowerCase().includes('ref no'));
-      if(idInvoiceIndex===-1 || nominalIndex===-1 || refNoIndex===-1){ showCSVError('Required columns not found. Please ensure CSV contains: ID Invoice, Nominal, Ref.no columns.'); return; }
-      pgaResults = [];
-      for(let i=1;i<lines.length;i++){
-        const values = parseCSVLine(lines[i]);
-        if(values.length>Math.max(idInvoiceIndex, nominalIndex, refNoIndex)){
-          const id = (values[idInvoiceIndex]||'').replace(/"/g,'').trim();
-          const amount = (values[nominalIndex]||'').replace(/"/g,'').trim();
-          const refNumb = (values[refNoIndex]||'').replace(/"/g,'').trim();
-          if(id && amount){ pgaResults.push({ id, amount, space:'', refNumb }); }
-        }
-      }
-      if(pgaResults.length===0){ showCSVError('No valid data found in CSV file.'); return; }
-      displayPGAResults();
-    }
-
-    function parseCSVLine(line){
-      const values=[]; let current=''; let inQuotes=false;
-      for(let i=0;i<line.length;i++){ const ch=line[i]; if(ch==='"'){ inQuotes=!inQuotes; } else if(ch===',' && !inQuotes){ values.push(current); current=''; } else { current+=ch; } }
-      values.push(current); return values;
-    }
-
-    function displayPGAResults(){
-      const body = document.getElementById('pgaTableBody'); const resultsDiv = document.getElementById('pgaResults'); const stats = document.getElementById('pgaStatsContent');
-      body.innerHTML=''; pgaResults.forEach(r=>{ const tr=document.createElement('tr'); tr.innerHTML = `<td>${r.id}</td><td>${r.amount}</td><td class="empty-cell">${r.space||'&nbsp;'}</td><td>${r.refNumb||''}</td>`; body.appendChild(tr); });
-      const totalAmount = pgaResults.filter(r=>r.amount).reduce((s,r)=>{ const clean = (r.amount||'').replace(/[^0-9.,]/g,'').replace(/,/g,''); return s + (parseInt(clean)||0); },0);
-      stats.innerHTML = `<div class="muted-2">Total Records: ${pgaResults.length}<br>Total Amount: Rp ${totalAmount.toLocaleString('id-ID')}</div>`;
-      resultsDiv.style.display='block';
-    }
-
-    function clearPGAData(){ 
-      pgaResults=[]; const b=document.getElementById('pgaTableBody'); if(b) b.innerHTML=''; 
-      document.getElementById('pgaResults').style.display='none'; document.getElementById('csvErrorContainer').innerHTML=''; 
-      document.getElementById('fileName').textContent=''; showCopySuccess('PGA data cleared!'); 
-    }
-
-    function copyIDAmount(button){
-      if(!pgaResults || pgaResults.length===0){
-        showCSVError('No data to copy. Please import a CSV file first.');
-        return;
-      }
-
-      const lines = pgaResults.map(r => `${r.id}\t${r.amount}`);
-      const textToCopy = lines.join('\n');
-
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(textToCopy)
-          .then(() => showCopySuccess(button))
-          .catch(() => fallbackCopy(textToCopy, button));
-      } else {
-        fallbackCopy(textToCopy, button);
-      }
-    }
-
-    function copyRefNumb(button){
-      if(!pgaResults || pgaResults.length===0){
-        showCSVError('No data to copy. Please import a CSV file first.');
-        return;
-      }
-
-      const lines = pgaResults.map(r => r.refNumb);
-      const textToCopy = lines.join('\n');
-
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(textToCopy)
-          .then(() => showCopySuccess(button))
-          .catch(() => fallbackCopy(textToCopy, button));
-      } else {
-        fallbackCopy(textToCopy, button);
-      }
-    }
-
-    function fallbackCopy(text, button){
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      try{
-        document.execCommand('copy');
-        showCopySuccess(button);
-      } catch(e){
-        showCSVError('Failed to copy data. Please copy manually.');
-      }
-      ta.remove();
-    }
-
-    function showCSVError(message){
-      const c=document.getElementById('csvErrorContainer'); 
-      if(c) c.innerHTML = `<div style="background:linear-gradient(180deg,rgba(255,120,120,0.06),rgba(255,120,120,0.02));padding:10px;border-radius:8px;color:var(--danger);border-left:4px solid var(--danger)">${message}</div>`; 
-      setTimeout(()=>{ if(c) c.innerHTML=''; },5000); 
-    }
-
-    function showCopySuccess(button){
-      const originalText = button.textContent;
-      button.textContent = 'Copied!';
-      const prevBg = button.style.background;
-      button.style.background = 'linear-gradient(180deg,var(--success),#16a34a)';
-
-      setTimeout(() => {
-      button.textContent = originalText;
-      button.style.background = prevBg;
-      }, 1500);
-    }
-  </script>
+  <!-- JavaScript -->
+  <script src="script.js"></script>
 </body>
 </html>
-
-
-
-
-
-
-
-

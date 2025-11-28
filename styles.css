@@ -1,0 +1,505 @@
+/* ============================================
+   PGA Parser - Glass Morphism Theme
+   Leonardo.ai inspired / macOS 26 Style
+   ============================================ */
+
+/* Google Font - Montserrat */
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+
+:root {
+  /* Color Palette */
+  --bg-gradient: url("/images/grad-hero.png");
+  --grid-pattern: url("/images/grid-pattern.png");
+
+  /* Glass Card Styles */
+  --glass-card-bg: rgba(255, 245, 245, 0.17);
+  --glass-card-border: rgba(255, 245, 245, 0.31);
+  --glass-card-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  --glass-blur: 19.6px;
+
+  /* Glass Button Styles */
+  --glass-btn-bg: rgba(255, 245, 245, 0.67);
+  --glass-btn-border: rgba(255, 245, 245, 1);
+
+  /* Text Colors */
+  --text-dark: #1a1a2e;
+  --text-muted: rgba(30, 30, 50, 0.7);
+  --text-light: rgba(255, 255, 255, 0.9);
+
+  /* Accent Colors */
+  --accent-primary: #4338ca;
+  --accent-success: #059669;
+  --accent-danger: #dc2626;
+
+  /* Misc */
+  --card-radius: 16px;
+  --btn-radius: 16px;
+
+  font-synthesis: none;
+}
+
+/* Reset & Base */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: "Montserrat", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: #f8f9fc;
+  color: var(--text-dark);
+  display: flex;
+  align-items: stretch;
+  padding: 20px;
+  gap: 20px;
+}
+
+/* Background Layer */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--bg-gradient);
+  background-size: cover;
+  background-position: top center;
+  z-index: -2;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--grid-pattern);
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* App Shell */
+.app {
+  display: flex;
+  width: 100vw;
+  height: 100%;
+  gap: 28px;
+}
+
+/* ============================================
+   SIDEBAR - Glass Morphism
+   ============================================ */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 40px);
+  width: 220px;
+  border-radius: 25px;
+  background: var(--glass-card-bg);
+  border: 1px solid var(--glass-card-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-card-shadow);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex-shrink: 0;
+  overflow-y: auto;
+}
+
+/* Brand */
+.brand {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+}
+
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--glass-btn-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--glass-btn-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--accent-primary);
+  font-size: 16px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.brand h2 {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-dark);
+  margin: 0;
+}
+
+.brand p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.nav button {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  text-align: left;
+  padding: 12px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.nav button:hover {
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text-dark);
+}
+
+.nav button.active {
+  background: var(--glass-btn-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-btn-border);
+  color: var(--text-dark);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  border-left: 4px solid var(--accent-primary);
+  padding-left: 12px;
+}
+
+.sidebar .footer {
+  margin-top: auto;
+  font-size: 11px;
+  color: var(--text-muted);
+  text-align: center;
+  font-weight: 500;
+}
+
+/* ============================================
+   MAIN AREA
+   ============================================ */
+.main {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  padding: 0 0 28px 0;
+}
+
+/* Header */
+.header {
+  min-height: 5px;
+  padding: 10px 0 20px 0;
+}
+
+.title {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--text-dark);
+  line-height: 1.1;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.subtitle {
+  color: var(--text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+
+/* ============================================
+   CARD - Glass Morphism
+   ============================================ */
+.card {
+  background: var(--glass-card-bg);
+  border-radius: var(--card-radius);
+  border: 1px solid var(--glass-card-border);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--glass-card-shadow);
+  padding: 24px;
+}
+
+.input-card textarea {
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  padding: 16px;
+  border-radius: 12px;
+  color: var(--text-dark);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Courier New", monospace;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.input-card textarea:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.15);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.input-card textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/* ============================================
+   BUTTONS - Glass Morphism
+   ============================================ */
+.controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  border: none;
+  padding: 14px 20px;
+  border-radius: var(--btn-radius);
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 13px;
+  font-family: inherit;
+  min-width: 110px;
+  letter-spacing: 0.3px;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+}
+
+.btn.primary {
+  background: var(--glass-btn-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-btn-border);
+  color: var(--accent-primary);
+  box-shadow: var(--glass-card-shadow);
+}
+
+.btn.primary:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+.btn.danger {
+  background: var(--glass-btn-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-btn-border);
+  color: var(--accent-danger);
+  box-shadow: var(--glass-card-shadow);
+}
+
+.btn.danger:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-2px);
+}
+
+.btn.copy {
+  background: var(--glass-btn-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-btn-border);
+  color: var(--accent-success);
+  box-shadow: var(--glass-card-shadow);
+}
+
+.btn.copy:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-2px);
+}
+
+.btn.settings {
+  background: var(--glass-btn-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-btn-border);
+  color: var(--text-dark);
+}
+
+/* PGA Section Buttons */
+#pga .btn {
+  padding: 20px 24px;
+  min-width: 280px;
+}
+
+#pga .btn.small {
+  font-size: 12px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  min-width: 150px;
+}
+
+/* ============================================
+   TABLE - Glass Style
+   ============================================ */
+.table-wrap {
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid var(--glass-card-border);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 14px 16px;
+  text-align: left;
+  color: var(--text-dark);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+tbody td {
+  padding: 14px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.3);
+  color: var(--text-dark);
+}
+
+tbody tr:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.empty-cell {
+  background: rgba(255, 255, 255, 0.2);
+  text-align: center;
+  border-radius: 6px;
+  padding: 6px;
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+.muted {
+  color: var(--text-muted);
+}
+
+.muted-2 {
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.3s ease both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Scrollbar Styling */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+@media (max-width: 1100px) {
+  .main {
+    padding-bottom: 30px;
+  }
+  .sidebar {
+    display: none;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 768px) {
+  body {
+    padding: 12px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .btn {
+    min-width: auto;
+    padding: 12px 16px;
+  }
+
+  #pga .btn {
+    min-width: auto;
+    padding: 16px 20px;
+  }
+}
