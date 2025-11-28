@@ -407,16 +407,21 @@
         return;
       }
 
-      const allLines = inputText.split('\n');
+      const allLines = inputText
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .split('\n');
       parsedResults = [];
       const errors = [];
       let i = 0;
       let blockIndex = 1;
-
+      console.log('First 5 lines:', allLines.slice(0, 5));
+      console.log('Total lines:', allLines.length);
+      
       while (i < allLines.length) {
         try {
           // Skip until "TOPJITU"
-          if (allLines[i].trim() !== 'TOPJITU') {
+          if (!/^\s*TOPJITU\s*$/.test(allLines[i])) {
             i++;
             continue;
           }
@@ -430,8 +435,8 @@
             lineCount++;
           }
 
-          if (lineCount < 15) {
-            errors.push(`Block ${blockIndex}: Too short (only ${lineCount} lines, need at least 15).`);
+          if (lineCount < 10) {
+            errors.push(`Block ${blockIndex}: Too short (only ${lineCount} lines, need at least 10).`);
             i++; // move forward to avoid infinite loop
             blockIndex++;
             continue;
@@ -463,6 +468,9 @@
           if (!bank) { errors.push(`Block ${blockIndex}: Missing Bank (line 13).`); hasError = true; }
           if (!nominal) { errors.push(`Block ${blockIndex}: Missing Nominal (line 15).`); hasError = true; }
 
+          console.log(`Block ${blockIndex} - Line 1: "${allLines[i]}"`);
+          console.log(`Line 9: "${getLine(9)}", Line 11: "${getLine(11)}"`);
+          
           if (!hasError) {
             parsedResults.push({ bank, id, name, amount: nominal, reff, space: '' });
           }
@@ -671,4 +679,5 @@
   </script>
 </body>
 </html>
+
 
