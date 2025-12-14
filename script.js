@@ -670,18 +670,18 @@ function parseCashbackData(csv) {
   cashbackResults = [];
   // Start from index 1 to skip the header row
   for (let i = 1; i < lines.length; i++) {
-    // Split by one or more whitespace characters (tabs, spaces)
-    const values = lines[i].split(/\s+/);
+    // Split by comma
+    const values = lines[i].split(',');
 
     if (values.length >= 3) {
       const id = values[0];
       const lossAmount = values[2];
 
-      cashbackResults.push({ id, lossAmount });
-
       if (lossAmount === '-100000') {
-        break; // Stop parsing as requested by the user
+        break;
       }
+
+      cashbackResults.push({ id, lossAmount });
     }
   }
 
