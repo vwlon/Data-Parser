@@ -4,6 +4,8 @@
 
 let parsedResults = []
 let pgaResults = []
+let adminResults = []
+let sortStates = {}
 
 // Tab Navigation
 function showTab(name, btn) {
@@ -13,7 +15,7 @@ function showTab(name, btn) {
   if (btn) btn.classList.add("active")
 
   // Show/hide main sections
-  const sections = ["original", "pga"]
+  const sections = ["original", "pga", "admin"]
   sections.forEach((id) => {
     const el = document.getElementById(id)
     if (!el) return
@@ -197,12 +199,12 @@ function displayResults() {
 
   const bankCounts = {}
   parsedResults.forEach((r) => (bankCounts[r.bank] = (bankCounts[r.bank] || 0) + 1))
-  const totalAmount = parsedResults.filter((r) => r.amount).reduce((s, r) => s + (Number.parseInt(r.amount) || 0), 0)
+  const totalAmount = parsedResults.filter((r) => r.amount).reduce((s, r) => s + (parseFloat(r.amount.replace(/,/g, '')) || 0), 0)
 
   statsContent.innerHTML = `
     <div class="muted-2">
       <strong>Total Transactions:</strong> ${parsedResults.length}<br>
-      <strong>Total Amount:</strong> Rp ${totalAmount.toLocaleString("id-ID")}<br>
+      <strong>Total Amount:</strong> Rp ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}<br>
       <strong>Bank Distribution:</strong><br>
       ${Object.entries(bankCounts)
         .map(([b, c]) => `&nbsp;&nbsp;${b}: ${c}`)
@@ -373,14 +375,14 @@ function displayPGAResults() {
   const totalAmount = pgaResults
     .filter((r) => r.amount)
     .reduce((s, r) => {
-      const clean = (r.amount || "").replace(/[^0-9.,]/g, "").replace(/,/g, "")
-      return s + (Number.parseInt(clean) || 0)
+      const clean = (r.amount || "").replace(/[^0-9.,]/g, "").replace(/\./g, "").replace(',', '.')
+      return s + (parseFloat(clean) || 0)
     }, 0)
 
   stats.innerHTML = `
     <div class="muted-2">
       <strong>Total Records:</strong> ${pgaResults.length}<br>
-      <strong>Total Amount:</strong> Rp ${totalAmount.toLocaleString("id-ID")}
+      <strong>Total Amount:</strong> Rp ${totalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
     </div>
   `
   resultsDiv.style.display = "block"
@@ -495,4 +497,137 @@ function showCopySuccess(button) {
     button.textContent = originalText
     button.style.color = ""
   }, 1500)
+}
+
+/* --- Sorting Logic --- */
+function sortData(key, data, displayFn, stateKey) {
+  if (!sortStates[stateKey]) {
+    sortStates[stateKey] = { key: key, order: 'asc' };
+  } else if (sortStates[stateKey].key === key) {
+    sortStates[stateKey].order = sortStates[stateKey].order === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortStates[stateKey] = { key: key, order: 'asc' };
+  }
+
+  const { order } = sortStates[stateKey];
+  const isNumeric = ['amount', 'nominal'].includes(key.toLowerCase());
+
+  data.sort((a, b) => {
+    const valA = a[key];
+    const valB = b[key];
+
+    let compA = isNumeric ? parseFloat(String(valA).replace(/[^0-9.-]+/g,"")) : String(valA).toLowerCase();
+    let compB = isNumeric ? parseFloat(String(valB).replace(/[^0-9.-]+/g,"")) : String(valB).toLowerCase();
+
+    if (compA < compB) return order === 'asc' ? -1 : 1;
+    if (compA > compB) return order === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  displayFn();
+}
+
+function sortResults(key) {
+  sortData(key, parsedResults, displayResults, 'results');
+}
+
+function sortPGAResults(key) {
+  sortData(key, pgaResults, displayPGAResults, 'pga');
+}
+
+function sortAdminResults(key) {
+  sortData(key, adminResults, displayAdminResults, 'admin');
+}
+
+/* --- Admin Parser Functions --- */
+function parseAdminData() {
+  const inputText = document.getElementById("adminInputText").value;
+  if (!inputText.trim()) {
+    showError("Please paste your admin data to parse.", "adminErrorContainer");
+    return;
+  }
+
+  const lines = inputText.replace(/\r\n/g, "\n").split("\n");
+  adminResults = [];
+  let currentEntry = {};
+  let errors = [];
+
+  lines.forEach((line, index) => {
+    const trimmedLine = line.trim();
+    if (/^\d+\s+\w+/.test(trimmedLine)) {
+      if (currentEntry.id) adminResults.push(currentEntry);
+      currentEntry = { id: trimmedLine.split(/\s+/)[1] };
+    } else if (trimmedLine.toLowerCase().startsWith('withdraw')) {
+      currentEntry.amount = trimmedLine.split(/\s+/)[3];
+    } else if (trimmedLine.includes(',')) {
+      const parts = trimmedLine.split(',');
+      currentEntry.bank = parts[0];
+      currentEntry.name = parts.slice(2).join(',').trim();
+    }
+  });
+  if (currentEntry.id) adminResults.push(currentEntry);
+
+  if (adminResults.length === 0) {
+    showError("No valid admin data found. Please check the format.", "adminErrorContainer");
+    return;
+  }
+
+  displayAdminResults();
+  if (errors.length > 0) {
+    showError(`Found ${errors.length} parsing notices.`, "adminErrorContainer");
+  }
+}
+
+function displayAdminResults() {
+  const tableBody = document.getElementById("adminTableBody");
+  const resultsDiv = document.getElementById("adminResults");
+  const statsContent = document.getElementById("adminStatsContent");
+  tableBody.innerHTML = "";
+
+  adminResults.forEach(row => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${row.bank || ""}</td>
+      <td>${row.id || ""}</td>
+      <td class="empty-cell">&nbsp;</td>
+      <td>${row.amount || ""}</td>
+      <td>${row.name || ""}</td>
+    `;
+    tableBody.appendChild(tr);
+  });
+
+  const totalAmount = adminResults.reduce((sum, row) => sum + (parseFloat(row.amount.replace(/,/g, '')) || 0), 0);
+  statsContent.innerHTML = `
+    <div class="muted-2">
+      <strong>Total Transactions:</strong> ${adminResults.length}<br>
+      <strong>Total Amount:</strong> Rp ${totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    </div>
+  `;
+  resultsDiv.style.display = "block";
+}
+
+function clearAdminData() {
+  document.getElementById("adminInputText").value = "";
+  document.getElementById("adminResults").style.display = "none";
+  document.getElementById("adminErrorContainer").innerHTML = "";
+  adminResults = [];
+}
+
+function copyAdminResults() {
+  const table = document.getElementById("adminResultTable");
+  if (!table) {
+    showError("No result table found to copy.", "adminErrorContainer");
+    return;
+  }
+  const lines = Array.from(table.querySelectorAll("tbody tr")).map(tr => {
+    return Array.from(tr.cells).map(td => td.innerText.trim()).join("\t");
+  }).join("\n");
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(lines).then(() => {
+      showSuccess("Admin results copied to clipboard.", "adminErrorContainer");
+    }).catch(err => {
+      showError("Failed to copy: " + err, "adminErrorContainer");
+    });
+  }
 }
