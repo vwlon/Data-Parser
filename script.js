@@ -5,6 +5,7 @@
 let parsedResults = []
 let pgaResults = []
 let adminResults = []
+let cashbackResults = []
 let sortStates = {}
 
 // Tab Navigation
@@ -15,7 +16,7 @@ function showTab(name, btn) {
   if (btn) btn.classList.add("active")
 
   // Show/hide main sections
-  const sections = ["original", "pga", "admin"]
+  const sections = ["original", "pga", "admin", "cashback"]
   sections.forEach((id) => {
     const el = document.getElementById(id)
     if (!el) return
@@ -630,4 +631,124 @@ function copyAdminResults() {
       showError("Failed to copy: " + err, "adminErrorContainer");
     });
   }
+}
+
+/* --- Cashback Parser Functions --- */
+function handleCashbackFileSelect(event) {
+  const file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
+    showError("Please select a valid CSV file.", "cashbackErrorContainer");
+    return;
+  }
+
+  const fileNameEl = document.getElementById("cashbackFileName");
+  fileNameEl.textContent = `Selected: ${file.name}`;
+  fileNameEl.style.display = 'block';
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      parseCashbackData(e.target.result);
+    } catch (err) {
+      showError("Error reading file: " + err.message, "cashbackErrorContainer");
+    }
+  };
+  reader.readAsText(file);
+}
+
+function parseCashbackData(csv) {
+  // Normalize line endings and filter out empty lines
+  const lines = csv.replace(/\r\n/g, '\n').split('\n').map(l => l.trim()).filter(l => l);
+
+  if (lines.length <= 1) { // Check for header + at least one data row
+    showError("CSV file is empty or contains only a header.", "cashbackErrorContainer");
+    return;
+  }
+
+  cashbackResults = [];
+  // Start from index 1 to skip the header row
+  for (let i = 1; i < lines.length; i++) {
+    // Split by one or more whitespace characters (tabs, spaces)
+    const values = lines[i].split(/\s+/);
+
+    if (values.length >= 3) {
+      const id = values[0];
+      const lossAmount = values[2];
+
+      cashbackResults.push({ id, lossAmount });
+
+      if (lossAmount === '-100000') {
+        break; // Stop parsing as requested by the user
+      }
+    }
+  }
+
+  if (cashbackResults.length === 0) {
+    showError("No valid data could be parsed from the CSV file.", "cashbackErrorContainer");
+    return;
+  }
+
+  // Distribute the data into three tables
+  const totalRows = cashbackResults.length;
+  const baseSize = Math.floor(totalRows / 3);
+
+  const table1Data = cashbackResults.slice(0, baseSize);
+  const table2Data = cashbackResults.slice(baseSize, baseSize * 2);
+  const table3Data = cashbackResults.slice(baseSize * 2);
+
+  displayCashbackResults(table1Data, table2Data, table3Data);
+}
+
+function displayCashbackResults(data1, data2, data3) {
+  const resultsDiv = document.getElementById("cashbackResults");
+  const bodies = [
+    document.getElementById("cashbackTableBody1"),
+    document.getElementById("cashbackTableBody2"),
+    document.getElementById("cashbackTableBody3")
+  ];
+  const datasets = [data1, data2, data3];
+
+  bodies.forEach(b => { b.innerHTML = ""; }); // Clear all tables first
+
+  datasets.forEach((data, index) => {
+    data.forEach(row => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`;
+      bodies[index].appendChild(tr);
+    });
+  });
+
+  resultsDiv.style.display = "block";
+}
+
+function clearCashbackData() {
+  cashbackResults = [];
+  ["1", "2", "3"].forEach(n => {
+    document.getElementById(`cashbackTableBody${n}`).innerHTML = "";
+  });
+  document.getElementById("cashbackResults").style.display = "none";
+  document.getElementById("cashbackFileInput").value = null;
+  document.getElementById("cashbackFileName").style.display = "none";
+  document.getElementById("cashbackErrorContainer").innerHTML = "";
+  showSuccess("Cashback data and file selection have been cleared.", "cashbackErrorContainer");
+}
+
+function copyCashbackTable(tableNumber) {
+    const table = document.getElementById(`cashbackTable${tableNumber}`);
+    const body = table.querySelector('tbody');
+    if (!table || !body || body.rows.length === 0) {
+        showError(`Table ${tableNumber} has no data to copy.`, "cashbackErrorContainer");
+        return;
+    }
+    const text = Array.from(body.rows).map(row =>
+        Array.from(row.cells).map(cell => cell.innerText).join('\t')
+    ).join('\n');
+
+    navigator.clipboard.writeText(text).then(() => {
+        showSuccess(`Table ${tableNumber} data copied to clipboard.`, "cashbackErrorContainer");
+    }).catch(err => {
+        showError(`Failed to copy Table ${tableNumber}: ${err}`, "cashbackErrorContainer");
+    });
 }

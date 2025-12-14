@@ -1,0 +1,8 @@
+127.0.0.1 - - [14/Dec/2025 15:08:47] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [14/Dec/2025 15:08:47] "GET /styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [14/Dec/2025 15:08:47] "GET /script.js HTTP/1.1" 200 -
+127.0.0.1 - - [14/Dec/2025 15:08:48] "GET /grad-hero.webp HTTP/1.1" 200 -
+127.0.0.1 - - [14/Dec/2025 15:09:54] "GET /index.html HTTP/1.1" 200 -
+127.0.0.1 - - [14/Dec/2025 15:09:54] "GET /styles.css HTTP/1.1" 200 -
+127.0.0.1 - - [14/Dec/2025 15:09:54] "GET /script.js HTTP/1.1" 200 -
+127.0.0.1 - - [14/Dec/2025 15:09:54] "GET /grad-hero.webp HTTP/1.1" 200 -
