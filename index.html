@@ -29,6 +29,8 @@
       <nav class="nav" role="navigation">
         <button class="active" onclick="showTab('original', this)">PGA Withdraw</button>
         <button onclick="showTab('pga', this)">PGA Deposit</button>
+        <button onclick="showTab('admin', this)">Admin</button>
+        <button onclick="showTab('cashback', this)">Cashback</button>
       </nav>
       
       <div class="footer muted-2">Parser Tools v.6 © DLN • 2025</div>
@@ -60,12 +62,12 @@
             <table id="resultTable">
               <thead>
                 <tr>
-                  <th>Bank</th>
-                  <th>ID</th>
+                  <th onclick="sortResults('bank')">Bank <span class="sort-indicator">↕</span></th>
+                  <th onclick="sortResults('id')">ID <span class="sort-indicator">↕</span></th>
                   <th> </th>
-                  <th>Nominal</th>
-                  <th>Name</th>
-                  <th>Ref Number</th>
+                  <th onclick="sortResults('amount')">Nominal <span class="sort-indicator">↕</span></th>
+                  <th onclick="sortResults('name')">Name <span class="sort-indicator">↕</span></th>
+                  <th onclick="sortResults('reff')">Ref Number <span class="sort-indicator">↕</span></th>
                 </tr>
               </thead>
               <tbody id="tableBody"></tbody>
@@ -110,10 +112,10 @@
               <table id="pgaTable" style="margin: 0 auto;">
                 <thead>
                   <tr>
-                    <th>ID</th>
-                    <th>Nominal</th>
+                    <th onclick="sortPGAResults('id')">ID <span class="sort-indicator">↕</span></th>
+                    <th onclick="sortPGAResults('amount')">Nominal <span class="sort-indicator">↕</span></th>
                     <th> </th>
-                    <th>Ref Number</th>
+                    <th onclick="sortPGAResults('refNumb')">Ref Number <span class="sort-indicator">↕</span></th>
                   </tr>
                 </thead>
                 <tbody id="pgaTableBody"></tbody>
@@ -123,6 +125,122 @@
             <div style="margin-top: 14px; padding: 12px; text-align: center;">
               <div id="pgaStatsContent" class="muted-2"></div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Admin Parser Section -->
+      <section id="admin" class="card input-card" style="display: none">
+        <textarea id="adminInputText" placeholder="Paste your admin data here..."></textarea>
+        <div style="height: 16px"></div>
+        <div class="controls">
+          <button class="btn primary" onclick="parseAdminData()">Parse Admin Data</button>
+          <button class="btn copy" onclick="copyAdminResults()">Copy</button>
+          <button class="btn danger" onclick="clearAdminData()">Clear All</button>
+        </div>
+        <div id="adminErrorContainer" style="margin-top: 14px"></div>
+        <div id="adminResults" style="display: none; margin-top: 18px" class="fade-in">
+          <h3 style="margin: 0 0 12px 0; font-weight: 700; color: var(--text-dark)">Parsed Admin Data</h3>
+          <div class="table-wrap">
+            <table id="adminResultTable">
+              <thead>
+                <tr>
+                  <th onclick="sortAdminResults('bank')">Bank <span class="sort-indicator">↕</span></th>
+                  <th onclick="sortAdminResults('id')">ID <span class="sort-indicator">↕</span></th>
+                  <th> </th>
+                  <th onclick="sortAdminResults('amount')">Amount <span class="sort-indicator">↕</span></th>
+                  <th onclick="sortAdminResults('name')">Name <span class="sort-indicator">↕</span></th>
+                </tr>
+              </thead>
+              <tbody id="adminTableBody"></tbody>
+            </table>
+          </div>
+          <div class="card" style="margin-top: 14px; padding: 16px; background: rgba(255,255,255,0.3);">
+            <strong style="color: var(--text-dark)">Parsing Statistics</strong>
+            <div id="adminStatsContent" style="margin-top: 10px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cashback Section -->
+      <section id="cashback" class="card input-card" style="display: none">
+        <div style="
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          padding: 24px;
+          border-radius: 12px;
+          background: rgba(255, 255, 255, 0.2);
+        ">
+          <input type="file" id="cashbackFileInput" style="display: none" accept=".csv" onchange="handleCashbackFileSelect(event)">
+
+          <button class="btn primary" onclick="document.getElementById('cashbackFileInput').click()">
+            Choose CSV File
+          </button>
+
+          <div id="cashbackFileName" style="display: none;"></div>
+          <div id="cashbackErrorContainer" style="margin-top: 12px; text-align: center;"></div>
+
+          <div style="margin-top: 1rem">
+            <button class="btn danger small" onclick="clearCashbackData()">Clear All</button>
+          </div>
+
+          <!-- Cashback Results -->
+          <div id="cashbackResults" style="display: none; margin-top: 20px; width: 100%;">
+            <details>
+              <summary>Output Table 1</summary>
+              <div class="table-wrap" style="margin-top: 16px;">
+                <table id="cashbackTable1" style="margin: 0 auto;">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Loss Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cashbackTableBody1"></tbody>
+                </table>
+              </div>
+              <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 1rem">
+                <button class="btn copy small" onclick="copyCashbackTable(1)">Copy Table 1</button>
+              </div>
+            </details>
+
+            <details>
+              <summary>Output Table 2</summary>
+              <div class="table-wrap" style="margin-top: 16px;">
+                <table id="cashbackTable2" style="margin: 0 auto;">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Loss Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cashbackTableBody2"></tbody>
+                </table>
+              </div>
+              <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 1rem">
+                <button class="btn copy small" onclick="copyCashbackTable(2)">Copy Table 2</button>
+              </div>
+            </details>
+
+            <details>
+              <summary>Output Table 3</summary>
+              <div class="table-wrap" style="margin-top: 16px;">
+                <table id="cashbackTable3" style="margin: 0 auto;">
+                  <thead>
+                    <tr>
+                      <th>ID</th>
+                      <th>Loss Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody id="cashbackTableBody3"></tbody>
+                </table>
+              </div>
+              <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 1rem">
+                <button class="btn copy small" onclick="copyCashbackTable(3)">Copy Table 3</button>
+              </div>
+            </details>
+
           </div>
         </div>
       </section>

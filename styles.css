@@ -398,6 +398,18 @@ thead th {
   text-transform: uppercase;
   font-size: 11px;
   letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+thead th:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.sort-indicator {
+  display: inline-block;
+  margin-left: 5px;
+  color: var(--text-muted);
 }
 
 tbody td {
@@ -503,4 +515,32 @@ tbody tr:hover {
     min-width: auto;
     padding: 16px 20px;
   }
+}
+
+/* Cashback Section - Details/Summary Styling */
+details {
+  border: 1px solid var(--glass-card-border);
+  background: var(--glass-card-bg);
+  border-radius: 12px;
+  margin-bottom: 1rem;
+  transition: all 0.3s ease-in-out;
+}
+
+details[open] {
+  padding-bottom: 1rem;
+}
+
+summary {
+  font-weight: 700;
+  padding: 1rem;
+  cursor: pointer;
+  list-style: none; /* Hide the default marker */
+}
+
+summary::-webkit-details-marker {
+  display: none; /* Hide the default marker in Chrome/Safari */
+}
+
+details[open] summary {
+  border-bottom: 1px solid var(--glass-card-border);
 }
