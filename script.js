@@ -849,15 +849,26 @@ function clearCashbackData() {
 
 function copyCashbackTable(tableNumber) {
     const data = cashbackTableData[tableNumber - 1];
+
     if (data.length === 0) {
         showError(`Table ${tableNumber} has no data to copy.`, "cashbackErrorContainer");
         return;
     }
-    const text = data.map(row => `${row.id}\t${row.lossAmount}`).join('\n');
+    const text = data
+        .map(row => {
+            const formattedLossAmount = Number.isFinite(row.lossAmount)
+                ? Math.trunc(row.lossAmount).toString()
+                : '';
 
-    navigator.clipboard.writeText(text).then(() => {
-        showSuccess(`Table ${tableNumber} data copied to clipboard.`, "cashbackErrorContainer");
-    }).catch(err => {
-        showError(`Failed to copy Table ${tableNumber}: ${err}`, "cashbackErrorContainer");
-    });
+            return `${row.id}\t${formattedLossAmount}`;
+        })
+        .join('\n');
+   
+    navigator.clipboard.writeText(text)
+        .then(() => {
+            showSuccess(`Table ${tableNumber} data copied to clipboard.`, "cashbackErrorContainer");
+        })
+        .catch(err => {
+            showError(`Failed to copy Table ${tableNumber}: ${err}`, "cashbackErrorContainer");
+        });
 }
