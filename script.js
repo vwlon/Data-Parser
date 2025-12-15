@@ -638,20 +638,17 @@ function copyAdminResults() {
 function handleCashbackFileSelect(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
-
   if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
     showError("Please select a valid CSV file.", "cashbackErrorContainer");
     return;
   }
-
   const fileNameEl = document.getElementById("cashbackFileName");
   fileNameEl.textContent = `Selected: ${file.name}`;
   fileNameEl.style.display = 'block';
-
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      parseCashbackData(e.target.result);
+      parseCashbackData(e.target.result); // Call the updated function
     } catch (err) {
       showError("Error reading file: " + err.message, "cashbackErrorContainer");
     }
@@ -659,6 +656,13 @@ function handleCashbackFileSelect(event) {
   reader.readAsText(file);
 }
 
+/**
+ * Parses the uploaded CSV string for cashback data.
+ * Identifies the *last* occurrence of '-100000' in the 'Loss Amount' column (index 2).
+ * Includes all data up to and including the last '-100000' row.
+ * Discards any data rows appearing after the last '-100000'.
+ * Preserves the original format of numbers without adding decimals.
+ */
 function parseCashbackData(csv) {
   // Normalize line endings and filter out empty lines
   const lines = csv.replace(/\r\n/g, '\n').split('\n').map(l => l.trim()).filter(l => l);
@@ -668,54 +672,109 @@ function parseCashbackData(csv) {
     return;
   }
 
-  cashbackResults = [];
-  // Start from index 1 to skip the header row
-  for (let i = 1; i < lines.length; i++) {
-    // Split by comma
-    const values = lines[i].split(',');
+  // Find the index of the header row to locate the 'Loss Amount' column
+  const headerLine = lines[0];
+  const headers = parseCSVLine(headerLine); // Reuse the existing helper function
+  const lossAmountColumnIndex = headers.findIndex(h => h.toLowerCase().includes('loss amount')); // Adjust if header name differs
 
-    // Expecting at least 2 columns: ID and Loss Amount
-    if (values.length >= 2) {
-      const id = values[0];
-      const lossAmount = values[2];
+  if (lossAmountColumnIndex === -1) {
+     showError("Required 'Loss Amount' column not found in CSV header.", "cashbackErrorContainer");
+     return;
+  }
 
-      // Stop processing if a specific terminator value is found
-      if (lossAmount === '-100000') {
-        break;
-      }
-
-      cashbackResults.push({ id, lossAmount });
+  // Parse data rows
+  let parsedRows = [];
+  for (let i = 1; i < lines.length; i++) { // Start from 1 to skip header
+    const values = parseCSVLine(lines[i]);
+    if (values.length > lossAmountColumnIndex) { // Ensure the column exists
+      const id = values[0]; // Assuming ID is in the first column
+      const lossAmount = values[lossAmountColumnIndex]; // Get the value from the correct column
+      parsedRows.push({ id, lossAmount });
     }
   }
 
+  // Find the *last* index of a row where the 'Loss Amount' column equals '-100000'
+  let lastTerminatorIndex = -1;
+  for (let i = parsedRows.length - 1; i >= 0; i--) {
+    if (parsedRows[i].lossAmount === '-100000') {
+      lastTerminatorIndex = i;
+      break; // Found the last one
+    }
+  }
+
+  // Determine the final dataset to use based on the terminator
+  let finalDataToProcess;
+  if (lastTerminatorIndex !== -1) {
+    // Include data up to and including the last '-100000' row
+    finalDataToProcess = parsedRows.slice(0, lastTerminatorIndex + 1);
+    console.log("Parsing stopped at last '-100000' found at index:", lastTerminatorIndex);
+  } else {
+    // No '-100000' found, use the entire parsed list
+    finalDataToProcess = parsedRows;
+    console.log("No '-100000' terminator found, processing all parsed rows.");
+  }
+
+  // Update the global variable with the final dataset
+  cashbackResults = finalDataToProcess;
+
   if (cashbackResults.length === 0) {
-    showError("No valid data could be parsed from the CSV file.", "cashbackErrorContainer");
+    showError("No valid data could be parsed or no terminator found before end of file.", "cashbackErrorContainer");
     return;
   }
 
-  console.log("Parsed Cashback Results:", JSON.stringify(cashbackResults, null, 2));
+  console.log("Total cashbackResults after parsing and applying terminator rule:", cashbackResults.length);
+  // Distribute the data into three tables after parsing is complete
+  distributeCashbackDataToTables();
+}
 
-  // Distribute the data into three tables
+/**
+ * Distributes the globally stored cashbackResults array into three separate arrays
+ * and calls the display function.
+ */
+function distributeCashbackDataToTables() {
   const totalRows = cashbackResults.length;
+
+  if (totalRows === 0) {
+    // Handle case where there's no data after parsing
+    ["1", "2", "3"].forEach(n => {
+        const body = document.getElementById(`cashbackTableBody${n}`);
+        if (body) body.innerHTML = "";
+    });
+    document.getElementById("cashbackResults").style.display = "none";
+    return;
+  }
+
+  // Calculate base size and remainder for even distribution
   const baseSize = Math.floor(totalRows / 3);
   const remainder = totalRows % 3;
 
-  const table1Size = baseSize + (remainder > 0 ? 1 : 0);
-  const table2Size = baseSize + (remainder > 1 ? 1 : 0);
+  // Calculate individual table sizes
+  const table1Size = baseSize;
+  const table2Size = baseSize;
+  // The third table gets the base size plus any remainder
+  const table3Size = baseSize + remainder;
 
+  // Slice the data accordingly
   const table1Data = cashbackResults.slice(0, table1Size);
   const table2Data = cashbackResults.slice(table1Size, table1Size + table2Size);
-  const table3Data = cashbackResults.slice(table1Size + table2Size);
+  const table3Data = cashbackResults.slice(table1Size + table2Size, table1Size + table2Size + table3Size); // Explicit end index
 
-  cashbackTableData[0] = table1Data;
-  cashbackTableData[1] = table2Data;
-  cashbackTableData[2] = table3Data;
+  console.log(`Distributing ${totalRows} rows: T1=${table1Data.length}, T2=${table2Data.length}, T3=${table3Data.length}`);
 
+  // Display the distributed data
   displayCashbackResults(table1Data, table2Data, table3Data);
 }
 
+/**
+ * Displays the distributed cashback data into the three designated table bodies.
+ * This function now receives the pre-divided data arrays.
+ * @param {Array} data1 - Array of objects for table 1
+ * @param {Array} data2 - Array of objects for table 2
+ * @param {Array} data3 - Array of objects for table 3
+ */
 function displayCashbackResults(data1, data2, data3) {
   console.log("displayCashbackResults called with data lengths:", data1.length, data2.length, data3.length);
+
   const resultsDiv = document.getElementById("cashbackResults");
   const bodies = [
     document.getElementById("cashbackTableBody1"),
@@ -723,22 +782,28 @@ function displayCashbackResults(data1, data2, data3) {
     document.getElementById("cashbackTableBody3")
   ];
   const datasets = [data1, data2, data3];
-  console.log("Table bodies found:", bodies.map(b => !!b));
 
-  bodies.forEach(b => { if (b) b.innerHTML = ""; }); // Clear all tables first
+  console.log("Table bodies found in DOM:", bodies.every(b => !!b)); // Check if all elements exist
 
-  datasets.forEach((data, index) => {
-    console.log(`Rendering table ${index + 1} with ${data.length} rows.`);
-    const currentBody = bodies[index];
-    if (!currentBody) {
-      console.error(`Table body ${index + 1} not found in the DOM.`);
-      return;
+  // Clear all table bodies first
+  bodies.forEach(body => {
+    if (body) {
+      body.innerHTML = ""; // Clear previous content
+      // Populate the table body with data
+      datasets.forEach((dataset, index) => {
+        if (index === bodies.indexOf(body)) { // Match dataset to its corresponding body
+          dataset.forEach(row => {
+            const tr = document.createElement("tr");
+            // Use raw string values directly, preserving format like "-100000"
+            tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`;
+            body.appendChild(tr);
+          });
+          console.log(`Populated table ${index + 1} with ${dataset.length} rows.`);
+        }
+      });
+    } else {
+       console.error(`Target table body element for table ${bodies.indexOf(body) + 1} not found in the DOM.`);
     }
-    data.forEach(row => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`;
-      currentBody.appendChild(tr);
-    });
   });
 
   // Add scrolling to tables for large datasets
