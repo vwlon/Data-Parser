@@ -756,6 +756,10 @@ function distributeCashbackDataToTables() {
   const table2Data = cashbackResults.slice(table1Size, table1Size + table2Size);
   const table3Data = cashbackResults.slice(table1Size + table2Size, table1Size + table2Size + table3Size); // Explicit end index
 
+  cashbackTableData[0] = table1Data;
+  cashbackTableData[1] = table2Data;
+  cashbackTableData[2] = table3Data;
+
   console.log(`Distributing ${totalRows} rows: T1=${table1Data.length}, T2=${table2Data.length}, T3=${table3Data.length}`);
 
   // Display the distributed data
