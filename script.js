@@ -7,7 +7,7 @@ let pgaResults = []
 let adminResults = []
 let cashbackResults = []
 let sortStates = {}
-let cashbackTablesExpanded = false;
+let cashbackTableData = { table1: [], table2: [], table3: [] };
 
 // Tab Navigation
 function showTab(name, btn) {
@@ -638,19 +638,20 @@ function copyAdminResults() {
 function handleCashbackFileSelect(event) {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
+
   if (file.type !== "text/csv" && !file.name.endsWith(".csv")) {
     showError("Please select a valid CSV file.", "cashbackErrorContainer");
     return;
   }
+
   const fileNameEl = document.getElementById("cashbackFileName");
   fileNameEl.textContent = `Selected: ${file.name}`;
   fileNameEl.style.display = 'block';
+
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      parseCashbackData(e.target.result); // Calls the updated function
-      cashbackTablesExpanded = false; // Reset to collapsed view after new data load
-      updateExpandCollapseButton(); // Ensure button text is correct
+      parseCashbackData(e.target.result);
     } catch (err) {
       showError("Error reading file: " + err.message, "cashbackErrorContainer");
     }
@@ -661,92 +662,85 @@ function handleCashbackFileSelect(event) {
 function parseCashbackData(csv) {
   // Normalize line endings and filter out empty lines
   const lines = csv.replace(/\r\n/g, '\n').split('\n').map(l => l.trim()).filter(l => l);
+
   if (lines.length <= 1) { // Check for header + at least one data row
     showError("CSV file is empty or contains only a header.", "cashbackErrorContainer");
     return;
   }
-  cashbackResults = []; // Clear previous results
+
+  cashbackResults = [];
   // Start from index 1 to skip the header row
   for (let i = 1; i < lines.length; i++) {
     // Split by comma
     const values = lines[i].split(',');
-    // Expecting at least 2 columns: ID and Loss Amount (assuming ID is in column 0, Loss Amount in column 2 based on script)
-    if (values.length >= 3) { // Ensure enough columns exist
-      const id = values[0].replace(/"/g, '').trim(); // Remove quotes if present
-      const lossAmount = values[2].replace(/"/g, '').trim(); // Remove quotes if present
+
+    // Expecting at least 2 columns: ID and Loss Amount
+    if (values.length >= 2) {
+      const id = values[0];
+      const lossAmount = values[2];
+
       // Stop processing if a specific terminator value is found
       if (lossAmount === '-100000') {
         break;
       }
+
       cashbackResults.push({ id, lossAmount });
     }
   }
+
   if (cashbackResults.length === 0) {
     showError("No valid data could be parsed from the CSV file.", "cashbackErrorContainer");
     return;
   }
+
   console.log("Parsed Cashback Results:", JSON.stringify(cashbackResults, null, 2));
 
-  // Initial display (collapsed)
-  displayCashbackResults(cashbackResults, cashbackTablesExpanded); // Pass the full data and state
+  // Distribute the data into three tables
+  const totalRows = cashbackResults.length;
+  const baseSize = Math.floor(totalRows / 3);
+  const remainder = totalRows % 3;
+  const table1Size = baseSize + (remainder > 0 ? 1 : 0);
+  const table2Size = baseSize + (remainder > 1 ? 1 : 0);
+
+  cashbackTableData = {
+    table1: cashbackResults.slice(0, table1Size),
+    table2: cashbackResults.slice(table1Size, table1Size + table2Size),
+    table3: cashbackResults.slice(table1Size + table2Size)
+  };
+
+  displayCashbackResults(
+    cashbackTableData.table1,
+    cashbackTableData.table2,
+    cashbackTableData.table3
+  );
 }
 
-// UPDATED: displayCashbackResults now handles full data and expansion state
-function displayCashbackResults(fullData, isExpanded) {
-  console.log("displayCashbackResults called with data length:", fullData.length, "isExpanded:", isExpanded);
+function displayCashbackResults(data1, data2, data3) {
+  console.log("displayCashbackResults called with data lengths:", data1.length, data2.length, data3.length);
   const resultsDiv = document.getElementById("cashbackResults");
   const bodies = [
     document.getElementById("cashbackTableBody1"),
     document.getElementById("cashbackTableBody2"),
     document.getElementById("cashbackTableBody3")
   ];
+  const datasets = [data1, data2, data3];
+  console.log("Table bodies found:", bodies.map(b => !!b));
 
-  if (!resultsDiv || bodies.some(b => !b)) {
-     console.error("Cashback UI elements not found.");
-     return;
-  }
+  bodies.forEach(b => { if (b) b.innerHTML = ""; }); // Clear all tables first
 
-  // Calculate distribution of data across tables
-  const totalRows = fullData.length;
-  const baseSize = Math.floor(totalRows / 3);
-  const remainder = totalRows % 3;
-  const table1Size = baseSize + (remainder > 0 ? 1 : 0);
-  const table2Size = baseSize + (remainder > 1 ? 1 : 0);
-
-  const datasets = [
-    fullData.slice(0, table1Size),
-    fullData.slice(table1Size, table1Size + table2Size),
-    fullData.slice(table1Size + table2Size)
-  ];
-
-  // Clear all tables first
-  bodies.forEach(b => { if (b) b.innerHTML = ""; });
-
-  // Populate tables based on expansion state
   datasets.forEach((data, index) => {
+    console.log(`Rendering table ${index + 1} with ${data.length} rows.`);
     const currentBody = bodies[index];
     if (!currentBody) {
       console.error(`Table body ${index + 1} not found in the DOM.`);
       return;
     }
-
-    // Determine rows to display
-    const rowsToShow = isExpanded ? data : data.slice(0, 15); // Show all if expanded, else first 15
-
-    // Add rows to the table body
-    rowsToShow.forEach(row => {
+    // ⬇️ 15-row preview
+    data.forEach(row => {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`; // Use innerHTML for simplicity
+      tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`;
       currentBody.appendChild(tr);
     });
-
-    // Add ellipsis row if collapsed and data was truncated
-    if (!isExpanded && data.length > 15) {
-         const trEllipsis = document.createElement("tr");
-         trEllipsis.innerHTML = `<td colspan="2">... (${data.length - 15} more rows hidden)</td>`; // Span both columns
-         trEllipsis.classList.add('ellipsis-row'); // Optional: Add a CSS class for styling
-         currentBody.appendChild(trEllipsis);
-    }
   });
 
   if (resultsDiv) {
@@ -754,123 +748,32 @@ function displayCashbackResults(fullData, isExpanded) {
   }
 }
 
-// UPDATED: copyCashbackTable copies the full underlying data for the specified table part
-function copyCashbackTable(tableNumber) {
-    if (!cashbackResults || cashbackResults.length === 0) {
-        showError(`No cashback data available to copy.`, "cashbackErrorContainer");
-        return;
-    }
-
-    // Calculate the portion of the full array corresponding to the selected table
-    const totalRows = cashbackResults.length;
-    const baseSize = Math.floor(totalRows / 3);
-    const remainder = totalRows % 3;
-    const table1Size = baseSize + (remainder > 0 ? 1 : 0);
-    const table2Size = baseSize + (remainder > 1 ? 1 : 0);
-
-    let tableDataSlice;
-    switch (tableNumber) {
-        case '1':
-            tableDataSlice = cashbackResults.slice(0, table1Size);
-            break;
-        case '2':
-            tableDataSlice = cashbackResults.slice(table1Size, table1Size + table2Size);
-            break;
-        case '3':
-            tableDataSlice = cashbackResults.slice(table1Size + table2Size);
-            break;
-        default:
-            console.error("Invalid table number for copying:", tableNumber);
-            showError(`Invalid table number: ${tableNumber}`, "cashbackErrorContainer");
-            return;
-    }
-
-    // Convert the slice to TSV format
-    const textToCopy = tableDataSlice.map(row => `${row.id}\t${row.lossAmount}`).join('\n');
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textToCopy).then(() => {
-            showSuccess(`Full data for Table ${tableNumber} copied to clipboard.`, "cashbackErrorContainer"); // Updated message
-        }).catch(err => {
-            console.error("Clipboard API failed:", err);
-            fallbackCopyCashback(textToCopy, tableNumber); // Fallback function
-        });
-    } else {
-        console.warn("Clipboard API not supported, using fallback.");
-        fallbackCopyCashback(textToCopy, tableNumber); // Fallback function
-    }
-}
-// Fallback function for copying cashback data
-function fallbackCopyCashback(text, tableNumber) {
-    const textArea = document.createElement("textarea");
-    textArea.value = text;
-    // Move textarea off-screen to prevent focus/scrolling issues
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    textArea.style.top = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-
-    try {
-        const successful = document.execCommand('copy');
-        if (successful) {
-             showSuccess(`Full data for Table ${tableNumber} copied to clipboard (fallback).`, "cashbackErrorContainer"); // Updated message
-        } else {
-             showError(`Failed to copy data for Table ${tableNumber} using fallback.`, "cashbackErrorContainer");
-        }
-    } catch (err) {
-        console.error('Fallback copy method failed: ', err);
-        showError(`Failed to copy data for Table ${tableNumber} using fallback: ${err}`, "cashbackErrorContainer");
-    }
-
-    document.body.removeChild(textArea); // Clean up
-}
-
-
-// NEW: Function to handle the global expand/collapse action
-function toggleAllCashbackTables() {
-    cashbackTablesExpanded = !cashbackTablesExpanded; // Flip the state
-    displayCashbackResults(cashbackResults, cashbackTablesExpanded); // Redraw tables with new state
-    updateExpandCollapseButton(); // Update button text/icon
-}
-
-// NEW: Function to update the global toggle button's appearance
-function updateExpandCollapseButton() {
-    const toggleButton = document.getElementById("cashbackExpandCollapseBtn"); // Assumes you add this ID to your button
-    if (toggleButton) {
-        toggleButton.textContent = cashbackTablesExpanded ? "Collapse All Tables" : "Expand All Tables";
-        // Optionally, change icon or add/remove classes here
-    }
-}
-
-// NEW: Function to clear cashback data and reset state
 function clearCashbackData() {
-  cashbackResults = []; // Clear the stored data
-  // Reset expansion state
-  cashbackTablesExpanded = false;
-  updateExpandCollapseButton(); // Update button text
-
-  // Clear table bodies
+  cashbackResults = [];
   ["1", "2", "3"].forEach(n => {
-    const body = document.getElementById(`cashbackTableBody${n}`);
-    if (body) body.innerHTML = ""; // Clear content
+    document.getElementById(`cashbackTableBody${n}`).innerHTML = "";
   });
-
-  // Hide results section
-  const resultsDiv = document.getElementById("cashbackResults");
-  if (resultsDiv) resultsDiv.style.display = "none";
-
-  // Clear file input and name display
-  const fileInput = document.getElementById("cashbackFileInput");
-  if (fileInput) fileInput.value = null;
-  const fileNameEl = document.getElementById("cashbackFileName");
-  if (fileNameEl) fileNameEl.style.display = "none";
-
-  // Clear any error messages
-  const errorContainer = document.getElementById("cashbackErrorContainer");
-  if (errorContainer) errorContainer.innerHTML = "";
-
-  // Show success message
+  document.getElementById("cashbackResults").style.display = "none";
+  document.getElementById("cashbackFileInput").value = null;
+  document.getElementById("cashbackFileName").style.display = "none";
+  document.getElementById("cashbackErrorContainer").innerHTML = "";
   showSuccess("Cashback data and file selection have been cleared.", "cashbackErrorContainer");
+}
+
+// ✅ REPLACE: copyCashbackTable uses in-memory data, not DOM
+function copyCashbackTable(tableNumber) {
+  const tableData = cashbackTableData[`table${tableNumber}`];
+  if (!tableData || tableData.length === 0) {
+    showError(`Table ${tableNumber} has no data to copy.`, "cashbackErrorContainer");
+    return;
+  }
+
+  // ✅ Build text from full dataset
+  const text = tableData.map(row => `${row.id}\t${row.lossAmount}`).join('\n');
+
+  navigator.clipboard.writeText(text).then(() => {
+    showSuccess(`Full Table ${tableNumber} (${tableData.length} rows) copied.`, "cashbackErrorContainer");
+  }).catch(err => {
+    showError(`Copy failed: ${err}`, "cashbackErrorContainer");
+  });
 }
