@@ -675,7 +675,7 @@ function parseCashbackData(csv) {
   // Find the index of the header row to locate the 'Loss Amount' column
   const headerLine = lines[0];
   const headers = parseCSVLine(headerLine); // Reuse the existing helper function
-  const lossAmountColumnIndex = headers.findIndex(h => h.toLowerCase().includes('loss amount')); // Adjust if header name differs
+  const lossAmountColumnIndex = headers.findIndex(h => h.toLowerCase().includes('Player Menang Kalah')); // Adjust if header name differs
 
   if (lossAmountColumnIndex === -1) {
      showError("Required 'Loss Amount' column not found in CSV header.", "cashbackErrorContainer");
