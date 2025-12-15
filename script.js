@@ -6,6 +6,9 @@ let parsedResults = []
 let pgaResults = []
 let adminResults = []
 let cashbackResults = []
+let cashbackTableData = [[], [], []]
+let isCashbackExpanded = false
+let cashbackExpandButtons = []
 let sortStates = {}
 
 // Tab Navigation
@@ -706,44 +709,79 @@ function parseCashbackData(csv) {
   const table2Data = cashbackResults.slice(table1Size, table1Size + table2Size);
   const table3Data = cashbackResults.slice(table1Size + table2Size);
 
-  displayCashbackResults(table1Data, table2Data, table3Data);
+  cashbackTableData[0] = table1Data;
+  cashbackTableData[1] = table2Data;
+  cashbackTableData[2] = table3Data;
+
+  displayCashbackResults();
 }
 
-function displayCashbackResults(data1, data2, data3) {
-  console.log("displayCashbackResults called with data lengths:", data1.length, data2.length, data3.length);
+function displayCashbackResults() {
+  renderCashbackTables();
+  if (cashbackExpandButtons.length === 0) {
+    addExpandButtons();
+  }
   const resultsDiv = document.getElementById("cashbackResults");
-  const bodies = [
-    document.getElementById("cashbackTableBody1"),
-    document.getElementById("cashbackTableBody2"),
-    document.getElementById("cashbackTableBody3")
-  ];
-  const datasets = [data1, data2, data3];
-  console.log("Table bodies found:", bodies.map(b => !!b));
-
-  bodies.forEach(b => { if (b) b.innerHTML = ""; }); // Clear all tables first
-
-  datasets.forEach((data, index) => {
-    console.log(`Rendering table ${index + 1} with ${data.length} rows.`);
-    const currentBody = bodies[index];
-    if (!currentBody) {
-      console.error(`Table body ${index + 1} not found in the DOM.`);
-      return;
-    }
-    // ⬇️ 15-row preview
-    data.slice(0, 15).forEach(row => {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`;
-      currentBody.appendChild(tr);
-    });
-  });
-
   if (resultsDiv) {
     resultsDiv.style.display = "block";
   }
 }
 
+function renderCashbackTables() {
+  const bodies = [
+    document.getElementById("cashbackTableBody1"),
+    document.getElementById("cashbackTableBody2"),
+    document.getElementById("cashbackTableBody3")
+  ];
+
+  bodies.forEach((body, index) => {
+    if (!body) return;
+    body.innerHTML = "";
+    const data = cashbackTableData[index];
+    const rowsToShow = isCashbackExpanded ? data : data.slice(0, 15);
+    rowsToShow.forEach((row) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`;
+      body.appendChild(tr);
+    });
+  });
+}
+
+function addExpandButtons() {
+  for (let n = 1; n <= 3; n++) {
+    const table = document.getElementById(`cashbackTable${n}`);
+    if (!table) continue;
+    const button = document.createElement("button");
+    button.textContent = "Expand All";
+    button.style.marginBottom = "10px";
+    button.onclick = toggleCashbackExpand;
+    table.parentNode.insertBefore(button, table);
+    cashbackExpandButtons.push(button);
+  }
+}
+
+function toggleCashbackExpand() {
+  if (!isCashbackExpanded) {
+    const total = cashbackTableData.reduce((sum, arr) => sum + arr.length, 0);
+    if (total > 1000) {
+      if (!confirm("The dataset is large. Showing all rows may slow down the browser. Proceed?")) {
+        return;
+      }
+    }
+  }
+  isCashbackExpanded = !isCashbackExpanded;
+  renderCashbackTables();
+  cashbackExpandButtons.forEach((b) => {
+    b.textContent = isCashbackExpanded ? "Collapse All" : "Expand All";
+  });
+}
+
 function clearCashbackData() {
   cashbackResults = [];
+  cashbackTableData = [[], [], []];
+  isCashbackExpanded = false;
+  cashbackExpandButtons.forEach((b) => b.remove());
+  cashbackExpandButtons = [];
   ["1", "2", "3"].forEach(n => {
     document.getElementById(`cashbackTableBody${n}`).innerHTML = "";
   });
@@ -755,15 +793,12 @@ function clearCashbackData() {
 }
 
 function copyCashbackTable(tableNumber) {
-    const table = document.getElementById(`cashbackTable${tableNumber}`);
-    const body = table.querySelector('tbody');
-    if (!table || !body || body.rows.length === 0) {
+    const data = cashbackTableData[tableNumber - 1];
+    if (!data || data.length === 0) {
         showError(`Table ${tableNumber} has no data to copy.`, "cashbackErrorContainer");
         return;
     }
-    const text = Array.from(body.rows).map(row =>
-        Array.from(row.cells).map(cell => cell.innerText).join('\t')
-    ).join('\n');
+    const text = data.map(row => `${row.id}\t${row.lossAmount}`).join('\n');
 
     navigator.clipboard.writeText(text).then(() => {
         showSuccess(`Table ${tableNumber} data copied to clipboard.`, "cashbackErrorContainer");
