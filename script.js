@@ -673,10 +673,12 @@ function parseCashbackData(csv) {
     // Split by comma
     const values = lines[i].split(',');
 
-    if (values.length >= 3) {
+    // Expecting at least 2 columns: ID and Loss Amount
+    if (values.length >= 2) {
       const id = values[0];
       const lossAmount = values[2];
 
+      // Stop processing if a specific terminator value is found
       if (lossAmount === '-100000') {
         break;
       }
@@ -690,18 +692,25 @@ function parseCashbackData(csv) {
     return;
   }
 
+  console.log("Parsed Cashback Results:", JSON.stringify(cashbackResults, null, 2));
+
   // Distribute the data into three tables
   const totalRows = cashbackResults.length;
   const baseSize = Math.floor(totalRows / 3);
+  const remainder = totalRows % 3;
 
-  const table1Data = cashbackResults.slice(0, baseSize);
-  const table2Data = cashbackResults.slice(baseSize, baseSize * 2);
-  const table3Data = cashbackResults.slice(baseSize * 2);
+  const table1Size = baseSize + (remainder > 0 ? 1 : 0);
+  const table2Size = baseSize + (remainder > 1 ? 1 : 0);
+
+  const table1Data = cashbackResults.slice(0, table1Size);
+  const table2Data = cashbackResults.slice(table1Size, table1Size + table2Size);
+  const table3Data = cashbackResults.slice(table1Size + table2Size);
 
   displayCashbackResults(table1Data, table2Data, table3Data);
 }
 
 function displayCashbackResults(data1, data2, data3) {
+  console.log("displayCashbackResults called with data lengths:", data1.length, data2.length, data3.length);
   const resultsDiv = document.getElementById("cashbackResults");
   const bodies = [
     document.getElementById("cashbackTableBody1"),
@@ -709,18 +718,28 @@ function displayCashbackResults(data1, data2, data3) {
     document.getElementById("cashbackTableBody3")
   ];
   const datasets = [data1, data2, data3];
+  console.log("Table bodies found:", bodies.map(b => !!b));
 
-  bodies.forEach(b => { b.innerHTML = ""; }); // Clear all tables first
+  bodies.forEach(b => { if (b) b.innerHTML = ""; }); // Clear all tables first
 
   datasets.forEach((data, index) => {
-    data.forEach(row => {
+    console.log(`Rendering table ${index + 1} with ${data.length} rows.`);
+    const currentBody = bodies[index];
+    if (!currentBody) {
+      console.error(`Table body ${index + 1} not found in the DOM.`);
+      return;
+    }
+    // ⬇️ 15-row preview
+    data.slice(0, 15).forEach(row => {
       const tr = document.createElement("tr");
       tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`;
-      bodies[index].appendChild(tr);
+      currentBody.appendChild(tr);
     });
   });
 
-  resultsDiv.style.display = "block";
+  if (resultsDiv) {
+    resultsDiv.style.display = "block";
+  }
 }
 
 function clearCashbackData() {

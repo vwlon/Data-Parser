@@ -522,25 +522,51 @@ details {
   border: 1px solid var(--glass-card-border);
   background: var(--glass-card-bg);
   border-radius: 12px;
-  margin-bottom: 1rem;
   transition: all 0.3s ease-in-out;
-}
-
-details[open] {
-  padding-bottom: 1rem;
+  overflow: hidden; /* Prevents content from spilling out during animations */
 }
 
 summary {
-  font-weight: 700;
-  padding: 1rem;
+  padding: 0;
   cursor: pointer;
-  list-style: none; /* Hide the default marker */
+  list-style: none;
 }
 
 summary::-webkit-details-marker {
-  display: none; /* Hide the default marker in Chrome/Safari */
+  display: none;
 }
 
-details[open] summary {
+details[open] > summary {
   border-bottom: 1px solid var(--glass-card-border);
+}
+
+.summary-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  font-weight: 700;
+}
+
+.summary-content .btn.small {
+  padding: 8px 16px;
+  min-width: auto;
+}
+
+/* Cashback Section Grid Layout */
+.cashback-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.cashback-table-container {
+  padding: 1rem;
+}
+
+details:not([open]) .table-wrap {
+  max-height: 595px;
+  overflow-y: auto;
+  border: none;
+  background: transparent;
 }
