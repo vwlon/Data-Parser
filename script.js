@@ -686,7 +686,12 @@ function parseCashbackData(csv) {
     const values = parseCSVLine(lines[i]);
     if (values.length > lossAmountColumnIndex) { // Ensure the column exists
       const id = values[0]; // Assuming ID is in the first column
-      const lossAmount = values[lossAmountColumnIndex]; // Get the value from the correct column
+      // Normalize → number
+      const lossAmount = Number(
+        rawLossAmount
+          .replace(/,/g, '') // remove thousand separators
+          .trim()
+      );
       parsedRows.push({ id, lossAmount });
     }
   }
@@ -694,23 +699,16 @@ function parseCashbackData(csv) {
   // Find the *last* index of a row where the 'Loss Amount' column equals '-100000'
   let lastTerminatorIndex = -1;
   for (let i = parsedRows.length - 1; i >= 0; i--) {
-    if (parsedRows[i].lossAmount === '-100000') {
+    if (parsedRows[i].lossAmount === -100000) {
       lastTerminatorIndex = i;
-      break; // Found the last one
+      break;
     }
   }
 
-  // Determine the final dataset to use based on the terminator
-  let finalDataToProcess;
-  if (lastTerminatorIndex !== -1) {
-    // Include data up to and including the last '-100000' row
-    finalDataToProcess = parsedRows.slice(0, lastTerminatorIndex + 1);
-    console.log("Parsing stopped at last '-100000' found at index:", lastTerminatorIndex);
-  } else {
-    // No '-100000' found, use the entire parsed list
-    finalDataToProcess = parsedRows;
-    console.log("No '-100000' terminator found, processing all parsed rows.");
-  }
+  const finalDataToProcess =
+    lastTerminatorIndex !== -1
+      ? parsedRows.slice(0, lastTerminatorIndex + 1)
+      : parsedRows;
 
   // Update the global variable with the final dataset
   cashbackResults = finalDataToProcess;
