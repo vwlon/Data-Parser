@@ -6,8 +6,8 @@ let parsedResults = []
 let pgaResults = []
 let adminResults = []
 let cashbackResults = []
+let cashbackTableData = [[], [], []]
 let sortStates = {}
-let cashbackTableData = { table1: [], table2: [], table3: [] };
 
 // Tab Navigation
 function showTab(name, btn) {
@@ -610,7 +610,7 @@ function displayAdminResults() {
 
 function clearAdminData() {
   document.getElementById("adminInputText").value = "";
-  document.getElementById("adminResults").style.display = "none";
+  document.getElementById("adminResults").style.display = "none"
   document.getElementById("adminErrorContainer").innerHTML = "";
   adminResults = [];
 }
@@ -699,20 +699,19 @@ function parseCashbackData(csv) {
   const totalRows = cashbackResults.length;
   const baseSize = Math.floor(totalRows / 3);
   const remainder = totalRows % 3;
+
   const table1Size = baseSize + (remainder > 0 ? 1 : 0);
   const table2Size = baseSize + (remainder > 1 ? 1 : 0);
 
-  cashbackTableData = {
-    table1: cashbackResults.slice(0, table1Size),
-    table2: cashbackResults.slice(table1Size, table1Size + table2Size),
-    table3: cashbackResults.slice(table1Size + table2Size)
-  };
+  const table1Data = cashbackResults.slice(0, table1Size);
+  const table2Data = cashbackResults.slice(table1Size, table1Size + table2Size);
+  const table3Data = cashbackResults.slice(table1Size + table2Size);
 
-  displayCashbackResults(
-    cashbackTableData.table1,
-    cashbackTableData.table2,
-    cashbackTableData.table3
-  );
+  cashbackTableData[0] = table1Data;
+  cashbackTableData[1] = table2Data;
+  cashbackTableData[2] = table3Data;
+
+  displayCashbackResults(table1Data, table2Data, table3Data);
 }
 
 function displayCashbackResults(data1, data2, data3) {
@@ -735,12 +734,37 @@ function displayCashbackResults(data1, data2, data3) {
       console.error(`Table body ${index + 1} not found in the DOM.`);
       return;
     }
-    // ⬇️ 15-row preview
     data.forEach(row => {
       const tr = document.createElement("tr");
       tr.innerHTML = `<td>${row.id}</td><td>${row.lossAmount}</td>`;
       currentBody.appendChild(tr);
     });
+  });
+
+  // Add scrolling to tables for large datasets
+  ["1", "2", "3"].forEach(n => {
+    const tbody = document.getElementById(`cashbackTableBody${n}`);
+    const table = document.getElementById(`cashbackTable${n}`);
+    if (table && tbody) {
+      table.style.tableLayout = 'fixed';
+      table.style.width = '100%';
+      const thead = table.querySelector('thead');
+      if (thead) {
+        thead.style.display = 'table';
+        thead.style.width = 'calc(100% - 1em)'; // Approximate scrollbar width
+        thead.style.tableLayout = 'fixed';
+      }
+      tbody.style.display = 'block';
+      tbody.style.maxHeight = '400px';
+      tbody.style.overflowY = 'scroll';
+      tbody.style.width = '100%';
+      tbody.style.tableLayout = 'fixed';
+      Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+        tr.style.display = 'table';
+        tr.style.width = '100%';
+        tr.style.tableLayout = 'fixed';
+      });
+    }
   });
 
   if (resultsDiv) {
@@ -750,6 +774,7 @@ function displayCashbackResults(data1, data2, data3) {
 
 function clearCashbackData() {
   cashbackResults = [];
+  cashbackTableData = [[], [], []];
   ["1", "2", "3"].forEach(n => {
     document.getElementById(`cashbackTableBody${n}`).innerHTML = "";
   });
@@ -760,20 +785,17 @@ function clearCashbackData() {
   showSuccess("Cashback data and file selection have been cleared.", "cashbackErrorContainer");
 }
 
-// ✅ REPLACE: copyCashbackTable uses in-memory data, not DOM
 function copyCashbackTable(tableNumber) {
-  const tableData = cashbackTableData[`table${tableNumber}`];
-  if (!tableData || tableData.length === 0) {
-    showError(`Table ${tableNumber} has no data to copy.`, "cashbackErrorContainer");
-    return;
-  }
+    const data = cashbackTableData[tableNumber - 1];
+    if (data.length === 0) {
+        showError(`Table ${tableNumber} has no data to copy.`, "cashbackErrorContainer");
+        return;
+    }
+    const text = data.map(row => `${row.id}\t${row.lossAmount}`).join('\n');
 
-  // ✅ Build text from full dataset
-  const text = tableData.map(row => `${row.id}\t${row.lossAmount}`).join('\n');
-
-  navigator.clipboard.writeText(text).then(() => {
-    showSuccess(`Full Table ${tableNumber} (${tableData.length} rows) copied.`, "cashbackErrorContainer");
-  }).catch(err => {
-    showError(`Copy failed: ${err}`, "cashbackErrorContainer");
-  });
+    navigator.clipboard.writeText(text).then(() => {
+        showSuccess(`Table ${tableNumber} data copied to clipboard.`, "cashbackErrorContainer");
+    }).catch(err => {
+        showError(`Failed to copy Table ${tableNumber}: ${err}`, "cashbackErrorContainer");
+    });
 }

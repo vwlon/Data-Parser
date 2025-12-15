@@ -173,28 +173,23 @@
           background: rgba(255, 255, 255, 0.2);
         ">
           <input type="file" id="cashbackFileInput" style="display: none" accept=".csv" onchange="handleCashbackFileSelect(event)">
-
           <button class="btn primary" onclick="document.getElementById('cashbackFileInput').click()">
             Choose CSV File
           </button>
-
           <div id="cashbackFileName" style="display: none;"></div>
           <div id="cashbackErrorContainer" style="margin-top: 12px; text-align: center;"></div>
-
           <div style="margin-top: 1rem">
             <button class="btn danger small" onclick="clearCashbackData()">Clear All</button>
           </div>
-
           <!-- Cashback Results -->
           <div id="cashbackResults" style="display: none; margin-top: 20px; width: 100%;">
             <div class="cashback-grid">
-              <details>
-                <summary>
-                  <div class="summary-content">
-                    <span>Table 1</span>
-                    <button class="btn copy small" onclick="copyCashbackTable(1); event.stopPropagation();">Copy</button>
-                  </div>
-                </summary>
+              <!-- Table 1 -->
+              <div>
+                <div class="summary-content" style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 0 8px;">
+                  <strong>Table 1</strong>
+                  <button class="btn copy small" onclick="copyCashbackTable(1)">Copy</button>
+                </div>
                 <div class="cashback-table-container">
                   <div class="table-wrap">
                     <table id="cashbackTable1">
@@ -208,14 +203,14 @@
                     </table>
                   </div>
                 </div>
-              </details>
-              <details>
-                <summary>
-                  <div class="summary-content">
-                    <span>Table 2</span>
-                    <button class="btn copy small" onclick="copyCashbackTable(2); event.stopPropagation();">Copy</button>
-                  </div>
-                </summary>
+              </div>
+
+              <!-- Table 2 -->
+              <div>
+                <div class="summary-content" style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 0 8px;">
+                  <strong>Table 2</strong>
+                  <button class="btn copy small" onclick="copyCashbackTable(2)">Copy</button>
+                </div>
                 <div class="cashback-table-container">
                   <div class="table-wrap">
                     <table id="cashbackTable2">
@@ -229,14 +224,14 @@
                     </table>
                   </div>
                 </div>
-              </details>
-              <details>
-                <summary>
-                  <div class="summary-content">
-                    <span>Table 3</span>
-                    <button class="btn copy small" onclick="copyCashbackTable(3); event.stopPropagation();">Copy</button>
-                  </div>
-                </summary>
+              </div>
+
+              <!-- Table 3 -->
+              <div>
+                <div class="summary-content" style="display: flex; justify-content: space-between; margin-bottom: 8px; padding: 0 8px;">
+                  <strong>Table 3</strong>
+                  <button class="btn copy small" onclick="copyCashbackTable(3)">Copy</button>
+                </div>
                 <div class="cashback-table-container">
                   <div class="table-wrap">
                     <table id="cashbackTable3">
@@ -250,7 +245,7 @@
                     </table>
                   </div>
                 </div>
-              </details>
+              </div>
             </div>
           </div>
         </div>
