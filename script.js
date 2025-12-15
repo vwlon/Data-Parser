@@ -673,7 +673,8 @@ function parseCashbackData(csv) {
   }
 
   // Find the index of the header row to locate the 'Loss Amount' column
-  const lossAmountColumnIndex = 2; // 3rd column (0-based)
+   const lossAmountColumnIndex = 2; // 3rd column (0-based)
+   const rawLossAmount = values[lossAmountColumnIndex];  
 
   if (lossAmountColumnIndex === -1) {
      showError("Required 'Loss Amount' column not found in CSV header.", "cashbackErrorContainer");
